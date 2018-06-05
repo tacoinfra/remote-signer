@@ -1,0 +1,17 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "WEBSITE_SLOT_NAME": "Production",
+    "FUNCTIONS_EXTENSION_VERSION": "~1",
+    "ScmType": "GitHub",
+    "WEBSITE_AUTH_ENABLED": "False",
+    "APPINSIGHTS_INSTRUMENTATIONKEY": "33b9e382-b35b-4f5a-9ef3-f7a99e168093",
+    "AzureWebJobsDashboard": "DefaultEndpointsProtocol=https;AccountName=resignerdev925d;AccountKey=K8xLCWcbekYcAK08XxzTBfBKwCgt7P0ea2WEF1AAoXxzToLE1Sjisk1IOs9906GFVh9wbV5rkCwoN4Ffoc3fGA==",
+    "WEBSITE_NODE_DEFAULT_VERSION": "6.5.0",
+    "SCM_COMMAND_IDLE_TIMEOUT": "300",
+    "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "DefaultEndpointsProtocol=https;AccountName=resignerdev925d;AccountKey=K8xLCWcbekYcAK08XxzTBfBKwCgt7P0ea2WEF1AAoXxzToLE1Sjisk1IOs9906GFVh9wbV5rkCwoN4Ffoc3fGA==",
+    "WEBSITE_CONTENTSHARE": "resigner-dev925d",
+    "WEBSITE_SITE_NAME": "resigner-dev",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=resignerdev925d;AccountKey=K8xLCWcbekYcAK08XxzTBfBKwCgt7P0ea2WEF1AAoXxzToLE1Sjisk1IOs9906GFVh9wbV5rkCwoN4Ffoc3fGA=="
+  }
+}
