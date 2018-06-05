@@ -9,6 +9,6 @@
   "author": "Carl Youngblood, Blockscale LLC",
   "license": "UNLICENSED",
   "dependencies": {
-    "requests": "^0.2.2"
+    "request": "^2.87.0"
   }
 }
