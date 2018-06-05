@@ -1,0 +1,14 @@
+{
+  "name": "httptriggerjs1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Carl Youngblood, Blockscale LLC",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "requests": "^0.2.2"
+  }
+}
