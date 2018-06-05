@@ -6,7 +6,7 @@ module.exports = function (context, req) {
     request('http://www.google.com', function (error, response, body) {
       context.res = {
         // status: 200, /* Defaults to 200 */
-        body: "Goodbye " + (req.query.name || req.body.name) + body;
+        body: "Goodbye " + (req.query.name || req.body.name) + body
       };
     });
 
