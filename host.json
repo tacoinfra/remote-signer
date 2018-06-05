@@ -1,0 +1,66 @@
+{
+    "aggregator": {
+        "batchSize": 1000,
+        "flushTimeout": "00:00:30"
+    },
+    "applicationInsights": {
+        "sampling": {
+          "isEnabled": true,
+          "maxTelemetryItemsPerSecond" : 5
+        }
+    },
+    "eventHub": {
+      "maxBatchSize": 64,
+      "prefetchCount": 256,
+      "batchCheckpointFrequency": 1
+    },
+    "functions": [ "QueueProcessor", "GitHubWebHook" ],
+    "functionTimeout": "00:05:00",
+    "healthMonitor": {
+        "enabled": true,
+        "healthCheckInterval": "00:00:10",
+        "healthCheckWindow": "00:02:00",
+        "healthCheckThreshold": 6,
+        "counterThreshold": 0.80
+    },
+    "http": {
+        "routePrefix": "api",
+        "maxOutstandingRequests": 20,
+        "maxConcurrentRequests": 10,
+        "dynamicThrottlesEnabled": false
+    },
+    "logger": {
+        "categoryFilter": {
+            "defaultLevel": "Information",
+            "categoryLevels": {
+                "Host": "Error",
+                "Function": "Error",
+                "Host.Aggregator": "Information"
+            }
+        }
+    },
+    "queues": {
+      "maxPollingInterval": 2000,
+      "visibilityTimeout" : "00:00:30",
+      "batchSize": 16,
+      "maxDequeueCount": 5,
+      "newBatchThreshold": 8
+    },
+    "serviceBus": {
+      "maxConcurrentCalls": 16,
+      "prefetchCount": 100,
+      "autoRenewTimeout": "00:05:00"
+    },
+    "singleton": {
+      "lockPeriod": "00:00:15",
+      "listenerLockPeriod": "00:01:00",
+      "listenerLockRecoveryPollingInterval": "00:01:00",
+      "lockAcquisitionTimeout": "00:01:00",
+      "lockAcquisitionPollingInterval": "00:00:03"
+    },
+    "tracing": {
+      "consoleLevel": "verbose",
+      "fileLoggingMode": "debugOnly"
+    },
+    "watchDirectories": [ "Shared" ],
+}
