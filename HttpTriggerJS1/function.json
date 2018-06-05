@@ -1,4 +1,5 @@
 {
+  "disabled": false,
   "bindings": [
     {
       "authLevel": "function",
@@ -11,6 +12,5 @@
       "direction": "out",
       "name": "res"
     }
-  ],
-  "disabled": false
+  ]
 }
