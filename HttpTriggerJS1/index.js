@@ -1,12 +1,19 @@
+var request = require('request');
+
 module.exports = function (context, req) {
   context.log('JavaScript HTTP trigger function processed a request.');
 
   if (req.query.name || (req.body && req.body.name)) {
-    var request = require('request');
     request('http://www.google.com', function (error, response, body) {
-      context.res = {
-        body: "Goodbye " + (req.query.name || req.body.name) + body
-      };
+      if (error) {
+        context.res = {
+          body: "Error " + (req.query.name || req.body.name)
+        };
+      } else {
+        context.res = {
+          body: "Goodbye " + (req.query.name || req.body.name) + body
+        };
+      }
     });
   } else {
     context.res = {
