@@ -2,6 +2,7 @@ import struct
 import string
 from tezos_rpc_client import TezosRPCClient
 
+
 class Resigner:
     BLOCK_PREAMBLE = 1
     ENDORSEMENT_PREAMBLE = 2
@@ -35,18 +36,3 @@ class Resigner:
         current_level = rpc.get_current_level()
         payload_level = self.get_block_level()
         return current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
-
-
-def lambda_handler(event, context):
-    rs = Resigner(event)
-    signature = ''
-    if rs.is_valid_request():
-        if rs.is_block() and rs.is_within_level_threshold():
-            pass
-        elif rs.is_endorsement():
-            pass
-        else:
-            raise Exception('Invalid preamble.')
-    else:
-        raise Exception('Invalid request.')
-    return {'signature': signature}
