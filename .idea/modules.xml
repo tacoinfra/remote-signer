@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/resigner.iml" filepath="$PROJECT_DIR$/.idea/resigner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/remote-signer.iml" filepath="$PROJECT_DIR$/.idea/remote-signer.iml" />
     </modules>
   </component>
 </project>

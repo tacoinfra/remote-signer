@@ -1,13 +1,6 @@
-from resigner import Resigner
+from remote_signer import RemoteSigner
 
 
 def lambda_handler(event, context):
-    rs = Resigner(event)
-    signature = ''
-    if rs.is_block() and rs.is_within_level_threshold():
-        pass
-    elif rs.is_endorsement():
-        pass
-    else:
-        raise Exception('Invalid preamble.')
-    return {'signature': signature}
+    rs = RemoteSigner(event)
+    return {'signature': rs.sign(event)}
