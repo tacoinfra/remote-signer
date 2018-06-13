@@ -1,6 +1,6 @@
 import struct
 import string
-from tezos_rpc_client import TezosRPCClient
+from src.tezos_rpc_client import TezosRPCClient
 from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmMech
 from pyhsm.convert import bytes_to_hex
@@ -50,7 +50,8 @@ class RemoteSigner:
         payload_level = self.get_block_level()
         return current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
 
-    def sign(self, data_to_sign, test_mode=False):
+    def sign(self, test_mode=False):
+        data_to_sign = self.payload
         if self.valid_block_format(data_to_sign):
             if self.is_block() or self.is_endorsement():
                 if self.is_within_level_threshold():

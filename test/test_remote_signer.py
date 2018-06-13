@@ -1,5 +1,5 @@
 import unittest
-from remote_signer import RemoteSigner
+from src.remote_signer import RemoteSigner
 
 
 class TestRemoteSigner(unittest.TestCase):
@@ -38,7 +38,7 @@ class TestRemoteSigner(unittest.TestCase):
                 return 1
 
         rs = RemoteSigner(self.VALID_BLOCK, DummyRPCClient())
-        self.assertEqual(rs.sign(self.VALID_BLOCK, test_mode=True), self.SIGNED_BLOCK)
+        self.assertEqual(rs.sign(test_mode=True), self.SIGNED_BLOCK)
 
 
 if __name__ == '__main__':
