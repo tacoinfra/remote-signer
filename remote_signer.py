@@ -17,8 +17,8 @@ class RemoteSigner:
         self.payload = payload
         self.data = self.decode_block(self.payload)
         self.rpc_stub = rpc_stub
-        self.hsm_slot = environ['HSM_SLOT']
-        self.hsm_key_handle = environ['HSM_KEY_HANDLE']
+        self.hsm_slot = int(environ['HSM_SLOT'])
+        self.hsm_key_handle = int(environ['HSM_KEY_HANDLE'])
         hsm_user = environ['HSM_USER']
         hsm_password = environ['HSM_PASSWORD']
         self.hsm_pin = '{}:{}'.format(hsm_user, hsm_password)
