@@ -51,11 +51,11 @@ class RemoteSigner:
         return current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
 
     def sign(self, test_mode=False):
-        data_to_sign = self.payload
+        signed_data = ''
+        data_to_sign = self.payload[2:]  # strip preamble before signing
         if self.valid_block_format(data_to_sign):
             if self.is_block() or self.is_endorsement():
                 if self.is_within_level_threshold():
-                    signed_data = ''
                     if test_mode:
                         return self.TEST_SIGNATURE
                     else:
