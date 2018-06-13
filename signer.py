@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, Response
 from src.remote_signer import RemoteSigner
 
 app = Flask(__name__)
@@ -8,7 +8,7 @@ app = Flask(__name__)
 def sign():
     data = request.get_json(force=True)
     rs = RemoteSigner(data)
-    return {'signature': rs.sign()}
+    return Response(rs.sign(), status=200)
 
 
 if __name__ == '__main__':
