@@ -15,10 +15,22 @@ pip install -r requirements.txt
 ```
 export HSM_KEY_HANDLE=7
 export HSM_USER=resigner
-export HSM_PASSWORD=<password>
+export HSM_PASSWORD=blah
 export HSM_LIBFILE=/opt/cloudhsm/lib/libcloudhsm_pkcs11.so
 export HSM_SLOT=1
 export RPC_ADDR=localhost
 export RPC_PORT=8732
 FLASK_APP=signer flask run
+```
+
+## running the tests
+```
+export HSM_KEY_HANDLE=7
+export HSM_USER=resigner
+export HSM_PASSWORD=blah
+export HSM_LIBFILE=/opt/cloudhsm/lib/libcloudhsm_pkcs11.so
+export HSM_SLOT=1
+export RPC_ADDR=localhost
+export RPC_PORT=8732
+python -m unittest test/test_remote_signer.py
 ```
