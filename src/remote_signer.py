@@ -45,7 +45,6 @@ class RemoteSigner:
         return struct.unpack('>L', str)[0]
 
     def is_within_level_threshold(self):
-        return True
         rpc = self.rpc_stub or TezosRPCClient(node_url=self.rpc_addr, node_port=self.rpc_port)
         current_level = rpc.get_current_level()
         payload_level = self.get_block_level()
