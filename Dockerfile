@@ -13,6 +13,7 @@ RUN \
 	rm -f ./cloudhsm-client-pkcs11-latest.amzn1.x86_64.rpm && \
 	/opt/cloudhsm/bin/configure -a hsm.internal && \
 	pip3 install -r requirements.txt && \
+	chmod 755 /start-remote-signer.sh && \
 	yum clean all
 
 ENTRYPOINT ["/start-remote-signer.sh"]
