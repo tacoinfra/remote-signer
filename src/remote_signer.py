@@ -22,7 +22,8 @@ class RemoteSigner:
         self.data = self.decode_block(self.payload)
         self.rpc_stub = rpc_stub
         self.hsm_slot = int(environ['HSM_SLOT'])
-        self.hsm_key_handle = int(environ['HSM_KEY_HANDLE'])
+        self.hsm_priv_key_handle = int(environ['HSM_PRIV_KEY_HANDLE'])
+        self.hsm_pub_key_handle = int(environ['HSM_PUB_KEY_HANDLE'])
         hsm_user = environ['HSM_USER']
         hsm_password = environ['HSM_PASSWORD']
         self.hsm_pin = '{}:{}'.format(hsm_user, hsm_password)
@@ -72,7 +73,7 @@ class RemoteSigner:
         else:
             pubkey = ''
             with HsmClient(slot=1, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
-                pubkey = RemoteSigner.wrap_public_key(c.get_attribute_value(self.hsm_key_handle, HsmAttribute.EC_POINT))
+                pubkey = RemoteSigner.wrap_public_key(c.get_attribute_value(self.hsm_pub_key_handle, HsmAttribute.EC_POINT))
             return pubkey
 
     def sign(self, test_mode=False):
@@ -85,7 +86,7 @@ class RemoteSigner:
                         return self.TEST_SIGNATURE
                     else:
                         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
-                            sig = c.sign(handle=self.hsm_key_handle, data=data_to_sign, mechanism=HsmMech.ECDSA_SHA256)
+                            sig = c.sign(handle=self.hsm_priv_key_handle, data=data_to_sign, mechanism=HsmMech.ECDSA_SHA256)
                             signed_data = RemoteSigner.wrap_signature(sig)
                 else:
                     raise Exception('Invalid level')

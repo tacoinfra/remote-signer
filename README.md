@@ -13,7 +13,8 @@ pip install -r requirements.txt
 
 ## execution
 ```
-export HSM_KEY_HANDLE=7
+export HSM_PRIV_KEY_HANDLE=7
+export HSM_PUB_KEY_HANDLE=9
 export HSM_USER=resigner
 export HSM_PASSWORD=blah
 export HSM_LIBFILE=/opt/cloudhsm/lib/libcloudhsm_pkcs11.so
@@ -25,7 +26,8 @@ FLASK_APP=signer flask run
 
 ## running the tests
 ```
-export HSM_KEY_HANDLE=7
+export HSM_PRIV_KEY_HANDLE=7
+export HSM_PUB_KEY_HANDLE=9
 export HSM_USER=resigner
 export HSM_PASSWORD=blah
 export HSM_LIBFILE=/opt/cloudhsm/lib/libcloudhsm_pkcs11.so
