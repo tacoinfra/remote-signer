@@ -30,7 +30,7 @@ restore_ssl_cert() {
 	# Restore the customerCA.crt file from SSM
 	echo "Restoring customerCA.crt from SSM..."
 	aws --region=$REGION ssm get-parameters \
-		--name /tf/$HSMID/customerCA.crt \
+		--name /hsm/$HSMID/customerCA.crt \
 		--with-decryption \
 		--output text | sed 's/.*-----BEGIN/-----BEGIN/' | sed 's/CERTIFICATE-----.*/CERTIFICATE-----/' \
 		> /opt/cloudhsm/etc/customerCA.crt
@@ -45,7 +45,7 @@ restore_ssl_cert() {
 	# Restore the HSM password from SSM
 	echo "Restoring password from SSM..."
 	HSM_PASSWORD=`aws --region=$REGION ssm get-parameters \
-		--name /tf/$HSMID/password \
+		--name /hsm/$HSMID/password \
 		--with-decryption \
 		--output text | cut -f 4`
 	if [ $? -ne 0 ]
