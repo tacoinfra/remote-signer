@@ -1,9 +1,8 @@
 import struct
 import string
 from src.tezos_rpc_client import TezosRPCClient
-from pyhsm.hsmclient import HsmClient
+from pyhsm.hsmclient import HsmClient, HsmAttribute
 from pyhsm.hsmenums import HsmMech
-from pyhsm.convert import bytes_to_hex
 from os import environ
 import bitcoin
 from pyblake2 import blake2b
@@ -14,10 +13,11 @@ class RemoteSigner:
     ENDORSEMENT_PREAMBLE = 2
     LEVEL_THRESHOLD: int = 16
     TEST_SIGNATURE = 'p2sigfqcE4b3NZwfmcoePgdFCvDgvUNa6DBp9h7SZ7wUE92cG3hQC76gfvistHBkFidj1Ymsi1ZcrNHrpEjPXQoQybAv6rRxke'
-    P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]   # results in p2sig prefix when encoded with base58
+    TEST_KEY = 'p2pkDeaFc7jVTsjuA1ENABigmU1rGBkx9AJoWLpdpnyMHctQhyyQf6W'
+    P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]  # results in p2sig prefix when encoded with base58
     P256_PUBLIC_KEY = struct.unpack('>L', b'\x03\xB2\x8B\x7F')[0]  # results in p2pk prefix when encoded with base58
 
-    def __init__(self, payload, rpc_stub=None):
+    def __init__(self, payload='', rpc_stub=None):
         self.payload = payload
         self.data = self.decode_block(self.payload)
         self.rpc_stub = rpc_stub
@@ -65,6 +65,15 @@ class RemoteSigner:
     @staticmethod
     def wrap_public_key(key):
         return RemoteSigner.wrap(key.encode('utf-8'), 33, RemoteSigner.P256_PUBLIC_KEY)
+
+    def get_signer_pubkey(self, test_mode=False):
+        if test_mode:
+            return self.TEST_KEY
+        else:
+            pubkey = ''
+            with HsmClient(slot=1, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
+                pubkey = RemoteSigner.wrap_public_key(c.get_attribute_value(self.hsm_key_handle, HsmAttribute.EC_POINT))
+            return pubkey
 
     def sign(self, test_mode=False):
         signed_data = ''
