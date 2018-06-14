@@ -5,13 +5,17 @@ from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmMech
 from pyhsm.convert import bytes_to_hex
 from os import environ
+import bitcoin
+from pyblake2 import blake2b
 
 
 class RemoteSigner:
     BLOCK_PREAMBLE = 1
     ENDORSEMENT_PREAMBLE = 2
     LEVEL_THRESHOLD: int = 16
-    TEST_SIGNATURE = '87087b1c2d0c17da8e1ef8adae56b288306de5272fd98ce8a53701a7c07ca0e8ef60eb9a649dbaaa2b4f4ff7f01d3e272d941e3190173c693ed75f3dfc001f28'
+    TEST_SIGNATURE = 'p2sigfqcE4b3NZwfmcoePgdFCvDgvUNa6DBp9h7SZ7wUE92cG3hQC76gfvistHBkFidj1Ymsi1ZcrNHrpEjPXQoQybAv6rRxke'
+    P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]   # results in p2sig prefix when encoded with base58
+    P256_PUBLIC_KEY = struct.unpack('>L', b'\x03\xB2\x8B\x7F')[0]  # results in p2pk prefix when encoded with base58
 
     def __init__(self, payload, rpc_stub=None):
         self.payload = payload
@@ -50,6 +54,18 @@ class RemoteSigner:
         payload_level = self.get_block_level()
         return current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
 
+    @staticmethod
+    def wrap(data, digest_size, magicbyte):
+        return bitcoin.bin_to_b58check(blake2b(data, digest_size=digest_size).digest(), magicbyte=magicbyte)
+
+    @staticmethod
+    def wrap_signature(sig):
+        return RemoteSigner.wrap(sig.encode('utf-8'), 64, RemoteSigner.P256_SIGNATURE)
+
+    @staticmethod
+    def wrap_public_key(key):
+        return RemoteSigner.wrap(key.encode('utf-8'), 33, RemoteSigner.P256_PUBLIC_KEY)
+
     def sign(self, test_mode=False):
         signed_data = ''
         data_to_sign = self.payload[2:]  # strip preamble before signing
@@ -61,7 +77,7 @@ class RemoteSigner:
                     else:
                         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
                             sig = c.sign(handle=self.hsm_key_handle, data=data_to_sign, mechanism=HsmMech.ECDSA_SHA256)
-                            signed_data = bytes_to_hex(sig)
+                            signed_data = RemoteSigner.wrap_signature(sig)
                 else:
                     raise Exception('Invalid level')
             else:
