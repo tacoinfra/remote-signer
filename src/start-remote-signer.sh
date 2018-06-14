@@ -37,7 +37,7 @@ restore_ssl_cert() {
 	if [ $? -ne 0 ]
 	then
 		echo "SSM Error retrieving customerCA.crt"
-		#exit 1
+		exit 1
 	else
 		cat /opt/cloudhsm/etc/customerCA.crt
 	fi
@@ -51,7 +51,7 @@ restore_ssl_cert() {
 	if [ $? -ne 0 ]
 	then
 		echo "SSM Error retrieving password"
-		#exit 1
+		exit 1
 	fi
 }
 
@@ -74,4 +74,4 @@ monitor() {
 start_hsm_client
 restore_ssl_cert
 start_remote_signer
-monitor
+#monitor
