@@ -3,7 +3,7 @@ FROM amazonlinux:1
 COPY src/. /
 
 RUN \
-	yum install -y wget aws-cli python36 git && \
+	yum install -y wget aws-cli python36 python36-devel git gcc && \
 	easy_install-3.6 pip && \
 	wget https://s3.amazonaws.com/cloudhsmv2-software/CloudHsmClient/AmazonLinux/cloudhsm-client-latest.amzn1.x86_64.rpm && \
 	yum install -y ./cloudhsm-client-latest.amzn1.x86_64.rpm && \
