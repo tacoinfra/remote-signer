@@ -15,7 +15,7 @@ config = {
     'rpc_port': 8732,
     'keys': {
         'tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW': {
-            'public_key': 'p2pkDeaFc7jVTsjuA1ENABigmU1rGBkx9AJoWLpdpnyMHctQhyyQf6W',
+            'public_key': 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
             'private_handle': 7,
             'public_handle': 9
         }

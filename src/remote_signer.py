@@ -13,7 +13,7 @@ class RemoteSigner:
     ENDORSEMENT_PREAMBLE = 2
     LEVEL_THRESHOLD: int = 16
     TEST_SIGNATURE = 'p2sigfqcE4b3NZwfmcoePgdFCvDgvUNa6DBp9h7SZ7wUE92cG3hQC76gfvistHBkFidj1Ymsi1ZcrNHrpEjPXQoQybAv6rRxke'
-    TEST_KEY = 'p2pkDeaFc7jVTsjuA1ENABigmU1rGBkx9AJoWLpdpnyMHctQhyyQf6W'
+    TEST_KEY = 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS'
     P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]  # results in p2sig prefix when encoded with base58
     P256_PUBLIC_KEY = struct.unpack('>L', b'\x03\xB2\x8B\x7F')[0]  # results in p2pk prefix when encoded with base58
 
