@@ -4,15 +4,23 @@
 # -----------------------------------------------------------------------
 # Requires the following environment variables to be set
 # $REGION = the AWS region where the remote signer is deployed
-# $HSMADDR = The FQDN or IP address of the CloudHSM
 # $HSMID = A unique identifier for the CloudHSM
-# $HSMSLOT = The slot in the CloudHSM we are using, typically 1
-# $HSM_KEY_HANDLE = The handle of the private key that we will use to sign
-# $HSM_USER = The username we will login to the CloudHSM with
-# $HSM_PASSWORD = The password we will login to the CloudHSM with
-# $HSM_LIBFILE = Typically /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
-# $RPC_ADDR = The FQDN or IP address of the Tezos node
-# $RPC_PORT = The port that the node is listening on, typically 8732
+# In addition, a Systems Manager parameter should be set that contains the following:
+#	{
+#	  "hsm_address": "${HSMAddress}",
+#	  "hsm_username": "${HSMUser}",
+#	  "hsm_slot": ${HSMSlot},
+#	  "hsm_lib": "${HSMLibFile}",
+#	  "rpc_addr": "${NodeAddress}",
+#	  "rpc_port": "${RPCPort}",
+#	  "keys": {
+#	    "${HSMPubKey}": {
+#	      "hash": "${HSMPubKeyHash}",
+#	      "private_handle": ${HSMPrivKeyHandle},
+#	      "public_handle": ${HSMPubKeyHandle}
+#	    }
+#	  }
+#	}
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
