@@ -22,7 +22,7 @@ config = {
 }
 
 if path.isfile('keys.json'):
-    with open('data.txt', 'r') as myfile:
+    with open('keys.json', 'r') as myfile:
         json_blob = myfile.read().replace('\n', '')
         config = json.loads(json_blob)
 
