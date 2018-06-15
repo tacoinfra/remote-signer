@@ -1,7 +1,6 @@
 from flask import Flask, request, Response, json, jsonify
 from src.remote_signer import RemoteSigner
-import boto3
-from os import environ
+from os import path
 
 app = Flask(__name__)
 
@@ -22,14 +21,10 @@ config = {
     }
 }
 
-if environ.get('HSMID') and environ.get('REGION'):
-    client = boto3.client('ssm', region_name=environ['REGION'])
-    config = client.get_parameter(
-        Name='/hsm/{}/keys'.format(environ['HSMID']),
-        WithDecryption=False
-    )
-    key_validator_rs = RemoteSigner(config)
-    key_validator_rs.validate_keys()
+if path.isfile('keys.json'):
+    with open('data.txt', 'r') as myfile:
+        json_blob = myfile.read().replace('\n', '')
+        config = json.loads(json_blob)
 
 
 @app.route('/keys/<key_hash>', methods=['POST'])
