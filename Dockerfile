@@ -2,6 +2,7 @@ FROM amazonlinux:1
 
 COPY src/. /src/
 COPY signer.py /
+COPY requirements.txt /
 
 RUN \
 	yum install -y wget aws-cli python36 python36-devel git gcc && \
@@ -13,7 +14,7 @@ RUN \
 	yum install -y ./cloudhsm-client-pkcs11-latest.amzn1.x86_64.rpm && \
 	rm -f ./cloudhsm-client-pkcs11-latest.amzn1.x86_64.rpm && \
 	/opt/cloudhsm/bin/configure -a hsm.internal && \
-	pip3 install -r /src/requirements.txt && \
+	pip3 install -r /requirements.txt && \
 	chmod 755 /src/start-remote-signer.sh && \
 	yum clean all
 
