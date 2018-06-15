@@ -1,4 +1,4 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, json, jsonify
 from src.remote_signer import RemoteSigner
 
 app = Flask(__name__)
@@ -10,9 +10,16 @@ def sign():
     try:
         data = request.get_json(force=True)
         rs = RemoteSigner(data)
-        response = Response(rs.sign(), status=200)
+        response = jsonify({
+            'signature': rs.sign(test_mode=True)
+        })
     except Exception as e:
-        response = Response(str(e), status=500)
+        data = {'error': str(e)}
+        response = app.response_class(
+            response=json.dumps(data),
+            status=500,
+            mimetype='application/json'
+        )
     return response
 
 
@@ -21,9 +28,16 @@ def get_public_key():
     response = None
     try:
         rs = RemoteSigner()
-        response = Response(rs.get_signer_pubkey(), status=200)
+        response = jsonify({
+            'public_key': rs.get_signer_pubkey(test_mode=True)
+        })
     except Exception as e:
-        response = Response(str(e), status=500)
+        data = {'error': str(e)}
+        response = app.response_class(
+            response=json.dumps(data),
+            status=500,
+            mimetype='application/json'
+        )
     return response
 
 
