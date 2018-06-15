@@ -28,18 +28,17 @@ if environ.get('HSMID') and environ.get('REGION'):
         Name='/hsm/{}/keys'.format(environ['HSMID']),
         WithDecryption=False
     )
-    rs = RemoteSigner(config)
-    rs.validate_keys()
+    key_validator_rs = RemoteSigner(config)
+    key_validator_rs.validate_keys()
 
 
-@app.route('/tz3<key_hash>', methods=['POST'])
+@app.route('/keys/<key_hash>', methods=['POST'])
 def sign(key_hash):
     response = None
     try:
         data = request.get_json(force=True)
-        index = 'tz3{}'.format(key_hash)
-        if index in config['keys']:
-            key = config['keys'][index]
+        if key_hash in config['keys']:
+            key = config['keys'][key_hash]
             rs = RemoteSigner(config, data)
             response = jsonify({
                 'signature': rs.sign(key['private_handle'])
@@ -56,13 +55,12 @@ def sign(key_hash):
     return response
 
 
-@app.route('/tz3<key_hash>', methods=['GET'])
+@app.route('/keys/<key_hash>', methods=['GET'])
 def get_public_key(key_hash):
     response = None
     try:
-        index = 'tz3{}'.format(key_hash)
-        if index in config['keys']:
-            key = config['keys'][index]
+        if key_hash in config['keys']:
+            key = config['keys'][key_hash]
             response = jsonify({
                 'public_key': key['public_key']
             })
