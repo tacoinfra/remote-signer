@@ -6,3 +6,4 @@
 **/*.pyc
 src/bitcoin
 remote-signer.zip
+keys.json
