@@ -42,7 +42,7 @@ start_hsm_client() {
 load_password() {
 	# Loads the HSM password from SSM
 	echo "Loading password from SSM..."
-	HSM_PASSWORD=`aws --region=$REGION ssm get-parameters \
+	export HSM_PASSWORD=`aws --region=$REGION ssm get-parameters \
 		--name /hsm/$HSMID/password \
 		--with-decryption \
 		--output text | cut -f 4`
