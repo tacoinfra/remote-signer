@@ -1,6 +1,5 @@
 import requests
-import json
-
+import logging
 
 class TezosRPCClient:
     TIMEOUT = 5.0  # seconds
@@ -9,9 +8,12 @@ class TezosRPCClient:
         self.node_url = node_url
         self.node_port = node_port
 
-    def send_request(self, uri, payload={}):
+    def send_request(self, uri):
         url = 'http://{}:{}/{}'.format(self.node_url, self.node_port, uri)
-        return requests.get(url, data=json.dumps(payload), timeout=self.TIMEOUT)
+        logging.info('Performing get request {}'.format(url))
+        response = requests.get(url, timeout=self.TIMEOUT)
+        logging.info('Got response {}'.format(response))
+        return response
 
     def get_current_block(self):
         r = self.send_request('monitor/bootstrapped')

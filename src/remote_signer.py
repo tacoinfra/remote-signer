@@ -3,9 +3,11 @@ import string
 from src.tezos_rpc_client import TezosRPCClient
 from pyhsm.hsmclient import HsmClient, HsmAttribute
 from pyhsm.hsmenums import HsmMech
+from pyhsm.convert import hex_to_bytes, bytes_to_hex
 from os import environ
 import bitcoin
 from pyblake2 import blake2b
+import logging
 
 
 class RemoteSigner:
@@ -20,13 +22,18 @@ class RemoteSigner:
     def __init__(self, config, payload='', rpc_stub=None):
         self.keys = config['keys']
         self.payload = payload
+        logging.info('Verifying payload')
         self.data = self.decode_block(self.payload)
+        logging.info('Payload {} is valid'.format(self.data))
         self.rpc_stub = rpc_stub
         self.hsm_slot = config['hsm_slot']
         hsm_user = config['hsm_username']
+        logging.info('HSM user is {}'.format(config['hsm_username']))
+        logging.info('Attempting to read env var HSM_PASSWORD')
         hsm_password = environ['HSM_PASSWORD']
         self.hsm_pin = '{}:{}'.format(hsm_user, hsm_password)
         self.hsm_libfile = config['hsm_lib']
+        logging.info('HSM lib is {}'.format(config['hsm_lib']))
         self.rpc_addr = config['rpc_addr']
         self.rpc_port = config['rpc_port']
 
@@ -46,13 +53,20 @@ class RemoteSigner:
 
     def get_block_level(self):
         str = self.data[1:5]
-        return struct.unpack('>L', str)[0]
+        level = struct.unpack('>L', str)[0]
+        logging.info('Block level is {}'.format(level))
+        return level
 
     def is_within_level_threshold(self):
         rpc = self.rpc_stub or TezosRPCClient(node_url=self.rpc_addr, node_port=self.rpc_port)
         current_level = rpc.get_current_level()
         payload_level = self.get_block_level()
-        return current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
+        within_threshold = current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
+        if within_threshold:
+            logging.info('Level {} is within threshold of current level {}'.format(payload_level, current_level))
+        else:
+            logging.error('Level {} is not within threshold of current level {}'.format(payload_level, current_level))
+        return within_threshold
 
     @staticmethod
     def wrap(data, digest_size, magicbyte):
@@ -71,11 +85,15 @@ class RemoteSigner:
             return self.TEST_KEY
         else:
             pubkey = ''
+            logging.info('Retrieving public key from key handle {}'.format(handle))
             with HsmClient(slot=1, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
+                logging.info('Successfully logged into HSM client')
                 pubkey = RemoteSigner.wrap_public_key(c.get_attribute_value(handle, HsmAttribute.EC_POINT))
+                logging.info('Successfully retrieved public key {}'.format(pubkey))
             return pubkey
 
     def validate_keys(self):
+        logging.info('Validating all keys in config')
         for key_hash, val in self.keys.items():
             handle = val['public_handle']
             hsm_pubkey = self.get_signer_pubkey(handle)
@@ -85,20 +103,32 @@ class RemoteSigner:
 
     def sign(self, handle, test_mode=False):
         signed_data = ''
+        logging.info('About to sign {} with key handle {}'.format(self.data, handle))
         data_to_sign = self.payload[2:]  # strip preamble before signing
+        logging.info('Stripped preamble: {}'.format(data_to_sign))
         if self.valid_block_format(data_to_sign):
+            logging.info('Block format is valid')
             if self.is_block() or self.is_endorsement():
+                logging.info('Preamble is valid')
                 if self.is_within_level_threshold():
+                    logging.info('Block level is valid')
                     if test_mode:
                         return self.TEST_SIGNATURE
                     else:
+                        logging.info('About to sign with HSM client. Slot = {}, lib = {}, handle = {}'.format(self.hsm_slot, self.hsm_libfile, handle))
                         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
-                            sig = c.sign(handle=handle, data=data_to_sign, mechanism=HsmMech.ECDSA_SHA256)
-                            signed_data = RemoteSigner.wrap_signature(sig)
+                            sig = c.sign(handle=handle, data=hex_to_bytes(data_to_sign), mechanism=HsmMech.ECDSA_SHA256)
+                            decoded_sig = bytes_to_hex(sig)
+                            logging.info('Raw signature: {}'.format(decoded_sig))
+                            signed_data = RemoteSigner.wrap_signature(decoded_sig)
+                            logging.info('Wrapped signature: {}'.format(signed_data))
                 else:
+                    logging.error('Invalid level')
                     raise Exception('Invalid level')
             else:
+                logging.error('Invalid preamble')
                 raise Exception('Invalid preamble')
         else:
+            logging.error('Invalid payload')
             raise Exception('Invalid payload')
         return signed_data
