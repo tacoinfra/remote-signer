@@ -35,34 +35,14 @@ export AWS_SESSION_TOKEN=`curl http://169.254.169.254/latest/meta-data/iam/secur
 export AWS_REGION=$REGION
 
 start_hsm_client() {
-#	echo "Configuring CloudHSM address..."
-
-#	/opt/cloudhsm/bin/configure -a $HSMADDR
-#	cd /opt/cloudhsm/run
-#	exec /opt/cloudhsm/bin/cloudhsm_client /opt/cloudhsm/etc/cloudhsm_client.cfg >> /opt/cloudhsm/run/cloudhsm_client.log &
-#	cd
+	# This client must be started in order for the PKCS#11 library to communicate with the CloudHSM
 	sudo start cloudhsm-client
 }
 
 load_password() {
-	# Restore the customerCA.crt file from SSM
-#	echo "Restoring customerCA.crt from SSM..."
-#	aws --region=$REGION ssm get-parameters \
-#		--name /hsm/$HSMID/customerCA.crt \
-#		--with-decryption \
-#		--output text | sed 's/.*-----BEGIN/-----BEGIN/' | sed 's/CERTIFICATE-----.*/CERTIFICATE-----/'|head -20 \
-#		> /opt/cloudhsm/etc/customerCA.crt
-#	if [ $? -ne 0 ]
-#	then
-#		echo "SSM Error retrieving customerCA.crt"
-#		exit 1
-#	else
-#		cat /opt/cloudhsm/etc/customerCA.crt
-#	fi
-
 	# Loads the HSM password from SSM
 	echo "Loading password from SSM..."
-	HSM_PASSWORD=`aws --region=$REGION ssm get-parameters \
+	export HSM_PASSWORD=`aws --region=$REGION ssm get-parameters \
 		--name /hsm/$HSMID/password \
 		--with-decryption \
 		--output text | cut -f 4`
@@ -76,7 +56,7 @@ load_password() {
 start_remote_signer() {
 	echo "Starting remote signer..."
 	cd /home/ec2-user
-	FLASK_APP=signer FLASK_ENV=development /usr/local/bin/flask run --host=0.0.0.0
+	FLASK_APP=signer /usr/local/bin/flask run --host=0.0.0.0
 }
 
 monitor() {
