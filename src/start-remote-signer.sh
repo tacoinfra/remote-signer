@@ -76,7 +76,7 @@ load_password() {
 start_remote_signer() {
 	echo "Starting remote signer..."
 	cd /home/ec2-user
-	FLASK_APP=signer FLASK_ENV=development /usr/local/bin/flask run
+	FLASK_APP=signer FLASK_ENV=development /usr/local/bin/flask run --host=0.0.0.0
 }
 
 monitor() {
