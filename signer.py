@@ -90,5 +90,14 @@ def get_public_key(key_hash):
     return response
 
 
+@app.route('/authorized_keys', methods=['GET'])
+def authorized_keys():
+    return app.response_class(
+        response=json.dumps({}),
+        status=200,
+        mimetype='application/json'
+    )
+
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)
