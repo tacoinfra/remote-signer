@@ -53,7 +53,11 @@ class RemoteSigner:
         return list(self.data)[0] == self.ENDORSEMENT_PREAMBLE
 
     def get_block_level(self):
-        hex_level = self.data[-8:]
+        level = -1
+        if self.is_block():
+            hex_level = self.payload[2:10]
+        else:
+            hex_level = self.payload[-8:]
         level = struct.unpack('>L', unhexlify(hex_level))[0]
         logging.info('Block level is {}'.format(level))
         return level
