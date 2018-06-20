@@ -112,8 +112,9 @@ class RemoteSigner:
     def sign(self, handle, test_mode=False):
         signed_data = ''
         logging.info('About to sign {} with key handle {}'.format(self.data, handle))
-        data_to_sign = self.payload[2:]  # strip preamble before signing
-        logging.info('Stripped preamble: {}'.format(data_to_sign))
+        # data_to_sign = self.payload[2:]  # strip preamble before signing
+        # logging.info('Stripped preamble: {}'.format(data_to_sign))
+        data_to_sign = self.payload
         if self.valid_block_format(data_to_sign):
             logging.info('Block format is valid')
             if self.is_block() or self.is_endorsement():
