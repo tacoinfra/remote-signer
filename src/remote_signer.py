@@ -69,7 +69,7 @@ class RemoteSigner:
         if self.is_block():
             within_threshold = current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
         else:
-            within_threshold = current_level <= payload_level <= current_level + self.LEVEL_THRESHOLD
+            within_threshold = current_level - self.LEVEL_THRESHOLD <= payload_level <= current_level + self.LEVEL_THRESHOLD
         if within_threshold:
             logging.info('Level {} is within threshold of current level {}'.format(payload_level, current_level))
         else:

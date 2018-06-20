@@ -64,6 +64,14 @@ class TestRemoteSigner(unittest.TestCase):
         rs = RemoteSigner(self.TEST_CONFIG, self.VALID_ENDORSEMENT, DummyRPCClient())
         self.assertTrue(rs.is_within_level_threshold())
 
+    def test_succeeds_if_level_greater_than_endorsement_to_sign(self):
+        class DummyRPCClient:
+            def get_current_level(self):
+                return 635
+
+        rs = RemoteSigner(self.TEST_CONFIG, self.VALID_ENDORSEMENT, DummyRPCClient())
+        self.assertTrue(rs.is_within_level_threshold())
+
     def test_signs_block(self):
         class DummyRPCClient:
             def get_current_level(self):
