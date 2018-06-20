@@ -77,16 +77,12 @@ class RemoteSigner:
         return within_threshold
 
     @staticmethod
-    def wrap(data, digest_size, magicbyte):
-        return bitcoin.bin_to_b58check(blake2b(data, digest_size=digest_size).digest(), magicbyte=magicbyte)
-
-    @staticmethod
-    def wrap_signature(sig):
-        return RemoteSigner.wrap(sig, 64, RemoteSigner.P256_SIGNATURE)
+    def b58encode_signature(sig):
+        return bitcoin.bin_to_b58check(sig, magicbyte=RemoteSigner.P256_SIGNATURE)
 
     @staticmethod
     def wrap_public_key(key):
-        return RemoteSigner.wrap(key, 33, RemoteSigner.P256_PUBLIC_KEY)
+        return bitcoin.bin_to_b58check(blake2b(key, digest_size=33).digest(), magicbyte=RemoteSigner.P256_PUBLIC_KEY)
 
     def get_signer_pubkey(self, handle, test_mode=False):
         if test_mode:
@@ -110,11 +106,9 @@ class RemoteSigner:
                 raise Exception('Key handle {} does not match pubkey {}'.format(handle, val['public_key']))
 
     def sign(self, handle, test_mode=False):
-        signed_data = ''
-        logging.info('About to sign {} with key handle {}'.format(self.data, handle))
-        # data_to_sign = self.payload[2:]  # strip preamble before signing
-        # logging.info('Stripped preamble: {}'.format(data_to_sign))
+        encoded_sig = ''
         data_to_sign = self.payload
+        logging.info('About to sign {} with key handle {}'.format(data_to_sign, handle))
         if self.valid_block_format(data_to_sign):
             logging.info('Block format is valid')
             if self.is_block() or self.is_endorsement():
@@ -126,11 +120,12 @@ class RemoteSigner:
                     else:
                         logging.info('About to sign with HSM client. Slot = {}, lib = {}, handle = {}'.format(self.hsm_slot, self.hsm_libfile, handle))
                         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
-                            hashdata = blake2b(hex_to_bytes(data_to_sign), digest_size=32).digest()
-                            sig = c.sign(handle=handle, data=hashdata, mechanism=HsmMech.ECDSA_SHA256)
+                            hashed_data = blake2b(hex_to_bytes(data_to_sign), digest_size=32).digest()
+                            logging.info('Hashed data to sign: {}'.format(hashed_data))
+                            sig = c.sign(handle=handle, data=hashed_data, mechanism=HsmMech.ECDSA_SHA256)
                             logging.info('Raw signature: {}'.format(sig))
-                            signed_data = RemoteSigner.wrap_signature(sig)
-                            logging.info('Wrapped signature: {}'.format(signed_data))
+                            encoded_sig = RemoteSigner.b58encode_signature(sig)
+                            logging.info('Base58-encoded signature: {}'.format(encoded_sig))
                 else:
                     logging.error('Invalid level')
                     raise Exception('Invalid level')
@@ -140,4 +135,4 @@ class RemoteSigner:
         else:
             logging.error('Invalid payload')
             raise Exception('Invalid payload')
-        return signed_data
+        return encoded_sig
