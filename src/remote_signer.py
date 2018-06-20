@@ -16,9 +16,7 @@ class RemoteSigner:
     ENDORSEMENT_PREAMBLE = 2
     LEVEL_THRESHOLD: int = 16
     TEST_SIGNATURE = 'p2sigfqcE4b3NZwfmcoePgdFCvDgvUNa6DBp9h7SZ7wUE92cG3hQC76gfvistHBkFidj1Ymsi1ZcrNHrpEjPXQoQybAv6rRxke'
-    TEST_KEY = 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS'
     P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]  # results in p2sig prefix when encoded with base58
-    P256_PUBLIC_KEY = struct.unpack('>L', b'\x03\xB2\x8B\x7F')[0]  # results in p2pk prefix when encoded with base58
 
     def __init__(self, config, payload='', rpc_stub=None):
         self.keys = config['keys']
@@ -79,31 +77,6 @@ class RemoteSigner:
     @staticmethod
     def b58encode_signature(sig):
         return bitcoin.bin_to_b58check(sig, magicbyte=RemoteSigner.P256_SIGNATURE)
-
-    @staticmethod
-    def wrap_public_key(key):
-        return bitcoin.bin_to_b58check(blake2b(key, digest_size=33).digest(), magicbyte=RemoteSigner.P256_PUBLIC_KEY)
-
-    def get_signer_pubkey(self, handle, test_mode=False):
-        if test_mode:
-            return self.TEST_KEY
-        else:
-            pubkey = ''
-            logging.info('Retrieving public key from key handle {}'.format(handle))
-            with HsmClient(slot=1, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
-                logging.info('Successfully logged into HSM client')
-                pubkey = RemoteSigner.wrap_public_key(c.get_attribute_value(handle, HsmAttribute.EC_POINT))
-                logging.info('Successfully retrieved public key {}'.format(pubkey))
-            return pubkey
-
-    def validate_keys(self):
-        logging.info('Validating all keys in config')
-        for key_hash, val in self.keys.items():
-            handle = val['public_handle']
-            hsm_pubkey = self.get_signer_pubkey(handle)
-            wrapped_key = self.wrap_public_key(hsm_pubkey)
-            if wrapped_key != val['public_key']:
-                raise Exception('Key handle {} does not match pubkey {}'.format(handle, val['public_key']))
 
     def sign(self, handle, test_mode=False):
         encoded_sig = ''

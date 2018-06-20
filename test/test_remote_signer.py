@@ -80,10 +80,6 @@ class TestRemoteSigner(unittest.TestCase):
         rs = RemoteSigner(self.TEST_CONFIG, self.VALID_BLOCK, DummyRPCClient())
         self.assertEqual(rs.sign(7, test_mode=True), self.SIGNED_BLOCK)
 
-    def test_returns_public_key(self):
-        rs = RemoteSigner(self.TEST_CONFIG)
-        self.assertEqual(rs.get_signer_pubkey(7, test_mode=True), self.PUBLIC_KEY)
-
 
 if __name__ == '__main__':
     unittest.main()
