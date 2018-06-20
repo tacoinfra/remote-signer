@@ -66,7 +66,10 @@ class RemoteSigner:
         rpc = self.rpc_stub or TezosRPCClient(node_url=self.rpc_addr, node_port=self.rpc_port)
         current_level = rpc.get_current_level()
         payload_level = self.get_block_level()
-        within_threshold = current_level <= payload_level <= current_level + self.LEVEL_THRESHOLD
+        if self.is_block():
+            within_threshold = current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
+        else:
+            within_threshold = current_level <= payload_level <= current_level + self.LEVEL_THRESHOLD
         if within_threshold:
             logging.info('Level {} is within threshold of current level {}'.format(payload_level, current_level))
         else:
