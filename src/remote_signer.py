@@ -4,6 +4,7 @@ from src.tezos_rpc_client import TezosRPCClient
 from pyhsm.hsmclient import HsmClient, HsmAttribute
 from pyhsm.hsmenums import HsmMech
 from pyhsm.convert import hex_to_bytes, bytes_to_hex
+from binascii import unhexlify
 from os import environ
 import bitcoin
 from pyblake2 import blake2b
@@ -53,7 +54,7 @@ class RemoteSigner:
 
     def get_block_level(self):
         hex_level = self.data[-8:]
-        level = struct.unpack('>L', binascii.unhexlify(hex_level))[0]
+        level = struct.unpack('>L', unhexlify(hex_level))[0]
         logging.info('Block level is {}'.format(level))
         return level
 
