@@ -82,11 +82,11 @@ class RemoteSigner:
 
     @staticmethod
     def wrap_signature(sig):
-        return RemoteSigner.wrap(sig.encode('utf-8'), 64, RemoteSigner.P256_SIGNATURE)
+        return RemoteSigner.wrap(sig, 64, RemoteSigner.P256_SIGNATURE)
 
     @staticmethod
     def wrap_public_key(key):
-        return RemoteSigner.wrap(key.encode('utf-8'), 33, RemoteSigner.P256_PUBLIC_KEY)
+        return RemoteSigner.wrap(key, 33, RemoteSigner.P256_PUBLIC_KEY)
 
     def get_signer_pubkey(self, handle, test_mode=False):
         if test_mode:
@@ -126,9 +126,8 @@ class RemoteSigner:
                         logging.info('About to sign with HSM client. Slot = {}, lib = {}, handle = {}'.format(self.hsm_slot, self.hsm_libfile, handle))
                         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
                             sig = c.sign(handle=handle, data=hex_to_bytes(data_to_sign), mechanism=HsmMech.ECDSA_SHA256)
-                            decoded_sig = bytes_to_hex(sig)
-                            logging.info('Raw signature: {}'.format(decoded_sig))
-                            signed_data = RemoteSigner.wrap_signature(decoded_sig)
+                            logging.info('Raw signature: {}'.format(sig))
+                            signed_data = RemoteSigner.wrap_signature(sig)
                             logging.info('Wrapped signature: {}'.format(signed_data))
                 else:
                     logging.error('Invalid level')
