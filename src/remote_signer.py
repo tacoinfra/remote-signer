@@ -126,7 +126,7 @@ class RemoteSigner:
                     else:
                         logging.info('About to sign with HSM client. Slot = {}, lib = {}, handle = {}'.format(self.hsm_slot, self.hsm_libfile, handle))
                         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
-                            hashdata = blake2b(hex_to_bytes(data_to_sign), size=32).digest()
+                            hashdata = blake2b(hex_to_bytes(data_to_sign), digest_size=32).digest()
                             sig = c.sign(handle=handle, data=hashdata, mechanism=HsmMech.ECDSA_SHA256)
                             logging.info('Raw signature: {}'.format(sig))
                             signed_data = RemoteSigner.wrap_signature(sig)
