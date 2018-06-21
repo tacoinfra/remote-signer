@@ -95,7 +95,7 @@ class RemoteSigner:
                         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
                             hashed_data = blake2b(hex_to_bytes(data_to_sign), digest_size=32).digest()
                             logging.info('Hashed data to sign: {}'.format(hashed_data))
-                            sig = c.sign(handle=handle, data=hashed_data, mechanism=HsmMech.ECDSA_SHA256)
+                            sig = c.sign(handle=handle, data=hashed_data, mechanism=HsmMech.ECDSA)
                             logging.info('Raw signature: {}'.format(sig))
                             encoded_sig = RemoteSigner.b58encode_signature(sig)
                             logging.info('Base58-encoded signature: {}'.format(encoded_sig))
