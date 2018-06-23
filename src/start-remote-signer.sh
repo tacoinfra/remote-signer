@@ -27,7 +27,7 @@
 # ]
 
 export LC_ALL=en_US.UTF-8
-export LANG=en_US.UTF-
+export LANG=en_US.UTF-8
 ROLE=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/`
 export AWS_ACCESS_KEY_ID=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE | jq -r '.AccessKeyId'`
 export AWS_SECRET_ACCESS_KEY=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE | jq -r '.SecretAccessKey'`
