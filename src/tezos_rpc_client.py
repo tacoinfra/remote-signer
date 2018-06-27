@@ -4,12 +4,11 @@ import logging
 class TezosRPCClient:
     TIMEOUT = 5.0  # seconds
 
-    def __init__(self, node_url='localhost', node_port=8732):
+    def __init__(self, node_url='http://localhost:8732'):
         self.node_url = node_url
-        self.node_port = node_port
 
     def send_request(self, uri):
-        url = 'http://{}:{}/{}'.format(self.node_url, self.node_port, uri)
+        url = '{}/{}'.format(self.node_url, uri)
         logging.info('Performing get request {}'.format(url))
         response = requests.get(url, timeout=self.TIMEOUT)
         logging.info('Got response {}'.format(response))

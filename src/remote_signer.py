@@ -33,8 +33,7 @@ class RemoteSigner:
         self.hsm_pin = '{}:{}'.format(hsm_user, hsm_password)
         self.hsm_libfile = config['hsm_lib']
         logging.info('HSM lib is {}'.format(config['hsm_lib']))
-        self.rpc_addr = config['rpc_addr']
-        self.rpc_port = config['rpc_port']
+        self.node_addr = config['node_addr']
 
     @staticmethod
     def valid_block_format(blockdata):
@@ -61,7 +60,7 @@ class RemoteSigner:
         return level
 
     def is_within_level_threshold(self):
-        rpc = self.rpc_stub or TezosRPCClient(node_url=self.rpc_addr, node_port=self.rpc_port)
+        rpc = self.rpc_stub or TezosRPCClient(node_url=self.node_addr)
         current_level = rpc.get_current_level()
         payload_level = self.get_block_level()
         if self.is_block():

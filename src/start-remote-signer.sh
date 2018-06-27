@@ -10,12 +10,10 @@
 # that creates the autoscaling group of remote signers:
 # [
 #	{
-#	  "hsm_address": "${HSMAddress}",
 #	  "hsm_username": "${HSMUser}",
 #	  "hsm_slot": ${HSMSlot},
 #	  "hsm_lib": "${HSMLibFile}",
-#	  "rpc_addr": "${NodeAddress}",
-#	  "rpc_port": "${RPCPort}",
+#	  "node_addr": "${NodeAddress}",
 #	  "keys": {
 #	    "${HSMPubKey}": {
 #	      "hash": "${HSMPubKeyHash}",

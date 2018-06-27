@@ -11,12 +11,10 @@ app = Flask(__name__)
 
 # sample config used for testing
 config = {
-    'hsm_address': 'hsm.internal',
     'hsm_username': 'resigner',
     'hsm_slot': 1,
     'hsm_lib': '/opt/cloudhsm/lib/libcloudhsm_pkcs11.so',
-    'rpc_addr': 'node.internal',
-    'rpc_port': 8732,
+    'node_addr': 'http://node.internal:8732',
     'keys': {
         'tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW': {
             'public_key': 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
