@@ -52,7 +52,7 @@ class RemoteSigner:
     def get_block_level(self):
         level = -1
         if self.is_block():
-            hex_level = self.payload[6:14]
+            hex_level = self.payload[10:18]
         else:
             hex_level = self.payload[-8:]
         level = struct.unpack('>L', unhexlify(hex_level))[0]
