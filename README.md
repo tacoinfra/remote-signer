@@ -1,6 +1,6 @@
 # Tezos Remote Signer
 
-This is a Python Flask app that receives messages from the Tezos baking client and passes them on to the a remote HSM to be signed. This software uses the [py-hsm module](https://github.com/bentonstark/py-hsm) to support PKCS#11 signing operations, which means it should support the following HSMs:
+This is a Python Flask app that receives messages from the Tezos baking client and passes them on to a remote HSM to be signed. This software uses the [py-hsm module](https://github.com/bentonstark/py-hsm) to support PKCS#11 signing operations, which means it should support the following HSMs:
 
 * Gemalto SafeNet Luna SA-4
 * Gemalto SafeNet Luna SA-5
