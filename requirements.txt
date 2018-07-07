@@ -1,4 +1,4 @@
--e git+https://github.com/tacoinfra/pybitcointools.git@aeb0a2bbb8bbfe421432d776c649650eaeb882a5#egg=bitcoin
+-e git+https://github.com/vbuterin/pybitcointools.git@aeb0a2bbb8bbfe421432d776c649650eaeb882a5#egg=bitcoin
 requests==2.18.4
 py-hsm==2.5.0
 flask==1.0.2
