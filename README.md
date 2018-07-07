@@ -24,6 +24,7 @@ Please note that this software does not provide any authentication or authorizat
 
 ## Installation
 
+Please note that you will need to install and compile your vendor's PKCS#11 C library before the py-hsm module will work.
 ```
 virtualenv venv
 source venv/bin/activate
