@@ -89,7 +89,7 @@ class RemoteSigner:
         logging.info('About to sign {} with key handle {}'.format(data_to_sign, handle))
         if self.valid_block_format(data_to_sign):
             logging.info('Block format is valid')
-            if self.is_block() or self.is_endorsement():
+            if self.is_block():
                 logging.info('Preamble is valid')
                 if self.is_within_level_threshold():
                     logging.info('Block level is valid')
