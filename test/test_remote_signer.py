@@ -1,3 +1,9 @@
+#########################################################
+# Written by Carl Youngblood, carl@blockscale.net
+# Copyright (c) 2018 Blockscale LLC
+# released under the MIT license
+#########################################################
+
 import unittest
 from src.remote_signer import RemoteSigner
 
