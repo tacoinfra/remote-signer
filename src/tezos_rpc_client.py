@@ -5,13 +5,18 @@
 #########################################################
 
 import requests
+from requests.adapters import HTTPAdapter
 import logging
 
 class TezosRPCClient:
-    TIMEOUT = 5.0  # seconds
+    TIMEOUT = 10.0  # seconds
+    RETRIES = 3
 
     def __init__(self, node_url='http://localhost:8732'):
         self.node_url = node_url
+        s = requests.Session()
+        s.mount('http://', HTTPAdapter(max_retries=self.RETRIES))
+        s.mount('https://', HTTPAdapter(max_retries=self.RETRIES))
 
     def send_request(self, uri):
         url = '{}/{}'.format(self.node_url, uri)
