@@ -6,23 +6,30 @@
 
 import requests
 from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 import logging
 
+
 class TezosRPCClient:
-    TIMEOUT = 10.0  # seconds
+    TIMEOUT = 5.0  # seconds
     RETRIES = 3
 
     def __init__(self, node_url='http://localhost:8732'):
         self.node_url = node_url
-        s = requests.Session()
-        s.mount('http://', HTTPAdapter(max_retries=self.RETRIES))
-        s.mount('https://', HTTPAdapter(max_retries=self.RETRIES))
 
     def send_request(self, uri):
         url = '{}/{}'.format(self.node_url, uri)
         logging.info('Performing get request {}'.format(url))
-        response = requests.get(url, timeout=self.TIMEOUT)
-        logging.info('Got response {}'.format(response))
+        response = None
+        with requests.Session() as s:
+            retries = Retry(
+                total=self.RETRIES,
+                backoff_factor=0.2,
+                status_forcelist=[500, 502, 503, 504])
+            s.mount('http://', HTTPAdapter(max_retries=retries))
+            s.mount('https://', HTTPAdapter(max_retries=retries))
+            response = s.get(url, timeout=self.TIMEOUT)
+            logging.info('Got response {}'.format(response))
         return response
 
     def get_current_block(self):
