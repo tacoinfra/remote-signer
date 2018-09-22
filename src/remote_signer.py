@@ -20,7 +20,7 @@ import logging
 class RemoteSigner:
     BLOCK_PREAMBLE = 1
     ENDORSEMENT_PREAMBLE = 2
-    LEVEL_THRESHOLD: int = 16
+    LEVEL_THRESHOLD: int = 120
     TEST_SIGNATURE = 'p2sigfqcE4b3NZwfmcoePgdFCvDgvUNa6DBp9h7SZ7wUE92cG3hQC76gfvistHBkFidj1Ymsi1ZcrNHrpEjPXQoQybAv6rRxke'
     P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]  # results in p2sig prefix when encoded with base58
 
