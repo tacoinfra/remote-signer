@@ -44,9 +44,11 @@ class DynamoDBClient:
             )
         except ClientError as err:
             logging.error(err.put_response['Error']['Message'])
+            return False
         else: 
             logging.info("PutItem succeeded:")
             logging.info(json.dumps(put_response, indent=4))
+            return True
 
     def UpdateItem(self, key, value):
         try:
@@ -83,8 +85,10 @@ class DynamoDBClient:
             try:
               item = get_response['Item']
             except KeyError: # if get_response is empty, create an item in table
-                self.CreateItem('type', self.sig_type, self.level);
-                safe_to_sign = True
+                if self.CreateItem('type', self.sig_type, self.level):
+                    safe_to_sign = True
+                else:
+                    safe_to_sign = False
             else:
                 logging.info("GetItem succeeded:")
                 logging.info(json.dumps(get_response, indent=4, cls=DecimalEncoder))
