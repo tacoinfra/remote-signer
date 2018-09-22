@@ -6,7 +6,8 @@
 
 import struct
 import string
-from src.tezos_rpc_client import TezosRPCClient
+#from src.tezos_rpc_client import TezosRPCClient
+from src.dynamodb_client import DynamoDBClient
 from pyhsm.hsmclient import HsmClient, HsmAttribute
 from pyhsm.hsmenums import HsmMech
 from pyhsm.convert import hex_to_bytes, bytes_to_hex
@@ -20,7 +21,6 @@ import logging
 class RemoteSigner:
     BLOCK_PREAMBLE = 1
     ENDORSEMENT_PREAMBLE = 2
-    LEVEL_THRESHOLD: int = 120
     TEST_SIGNATURE = 'p2sigfqcE4b3NZwfmcoePgdFCvDgvUNa6DBp9h7SZ7wUE92cG3hQC76gfvistHBkFidj1Ymsi1ZcrNHrpEjPXQoQybAv6rRxke'
     P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]  # results in p2sig prefix when encoded with base58
 
@@ -40,6 +40,9 @@ class RemoteSigner:
         self.hsm_libfile = config['hsm_lib']
         logging.info('HSM lib is {}'.format(config['hsm_lib']))
         self.node_addr = config['node_addr']
+        # Add support for DynamoDB on 9-22-18 by LY
+        self.ddb_region = environ['REGION']
+        self.ddb_table = environ['DDB_TABLE']
 
     @staticmethod
     def valid_block_format(blockdata):
@@ -65,19 +68,19 @@ class RemoteSigner:
         logging.info('Block level is {}'.format(level))
         return level
 
-    def is_within_level_threshold(self):
-        rpc = self.rpc_stub or TezosRPCClient(node_url=self.node_addr)
-        current_level = rpc.get_current_level()
+    def not_already_signed(self):
         payload_level = self.get_block_level()
         if self.is_block():
-            within_threshold = current_level < payload_level <= current_level + self.LEVEL_THRESHOLD
+            sig_type = 'Baking'
         else:
-            within_threshold = current_level - self.LEVEL_THRESHOLD <= payload_level <= current_level + self.LEVEL_THRESHOLD
-        if within_threshold:
-            logging.info('Level {} is within threshold of current level {}'.format(payload_level, current_level))
+            sig_type = 'Endorsement'
+        ddb = DynamoDBClient(self.ddb_region, self.ddb_table, sig_type, payload_level)
+        not_signed = ddb.check_double_signature()
+        if not_signed:
+            logging.info('{} signature for level {} has not been generated before'.format(sig_type, payload_level))
         else:
-            logging.error('Level {} is not within threshold of current level {}'.format(payload_level, current_level))
-        return within_threshold
+            logging.error('{} signature for level {} has already been generated!'.format(sig_type, payload_level))
+        return not_signed
 
     @staticmethod
     def b58encode_signature(sig):
@@ -91,8 +94,7 @@ class RemoteSigner:
             logging.info('Block format is valid')
             if self.is_block() or self.is_endorsement():
                 logging.info('Preamble is valid')
-                if self.is_within_level_threshold():
-                    logging.info('Block level is valid')
+                if self.not_already_signed():
                     if test_mode:
                         return self.TEST_SIGNATURE
                     else:
