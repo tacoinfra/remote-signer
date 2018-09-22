@@ -1,6 +1,17 @@
--e git+https://github.com/vbuterin/pybitcointools.git@aeb0a2bbb8bbfe421432d776c649650eaeb882a5#egg=bitcoin
-requests==2.18.4
-py-hsm==2.5.0
-flask==1.0.2
-pyblake2==0.9.3
+-e git+https://github.com/tacoinfra/pybitcointools.git@aeb0a2bbb8bbfe421432d776c649650eaeb882a5#egg=bitcoin
 boto3==1.7.39
+botocore==1.12.9
+click==6.7
+docutils==0.14
+Flask==1.0.2
+itsdangerous==0.24
+Jinja2==2.10
+jmespath==0.9.3
+MarkupSafe==1.0
+py-hsm==2.5.0
+pyblake2==0.9.3
+python-dateutil==2.7.3
+s3transfer==0.1.13
+six==1.11.0
+urllib3==1.23
+Werkzeug==0.14.1
