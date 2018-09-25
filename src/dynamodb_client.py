@@ -43,7 +43,7 @@ class DynamoDBClient:
                 }
             )
         except ClientError as err:
-            logging.error(err.put_response['Error']['Message'])
+            logging.error(err.response['Error']['Message'])
             return False
         else: 
             logging.info("PutItem succeeded:")
@@ -78,8 +78,8 @@ class DynamoDBClient:
                 },
                 ConsistentRead=True
             )
-        except ClientError as e:
-            logging.error(e.get_response['Error']['Message'])
+        except ClientError as err:
+            logging.error(err.response['Error']['Message'])
             safe_to_sign = False
         else: # get_item didn't fail, but did we get an item?
             try:

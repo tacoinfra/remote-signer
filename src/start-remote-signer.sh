@@ -26,11 +26,6 @@
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
-ROLE=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/`
-export AWS_ACCESS_KEY_ID=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE | jq -r '.AccessKeyId'`
-export AWS_SECRET_ACCESS_KEY=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE | jq -r '.SecretAccessKey'`
-export AWS_SESSION_TOKEN=`curl http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE | jq -r '.Token'`
-export AWS_REGION=$REGION
 
 start_hsm_client() {
 	# This client must be started in order for the PKCS#11 library to communicate with the CloudHSM
@@ -57,17 +52,8 @@ start_remote_signer() {
 	FLASK_APP=signer /usr/local/bin/flask run --host=0.0.0.0
 }
 
-monitor() {
-	# This function monitors the CloudHSM client and remote signer and restarts them if necessary.
-	while true
-	do
-		sleep 60
-	done
-}
-
 # main
 
 start_hsm_client
 load_password
 start_remote_signer
-#monitor
