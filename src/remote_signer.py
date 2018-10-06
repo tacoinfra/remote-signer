@@ -6,7 +6,6 @@
 
 import struct
 import string
-#from src.tezos_rpc_client import TezosRPCClient
 from src.dynamodb_client import DynamoDBClient
 from pyhsm.hsmclient import HsmClient, HsmAttribute
 from pyhsm.hsmenums import HsmMech
@@ -16,6 +15,8 @@ from os import environ
 import bitcoin
 from pyblake2 import blake2b
 import logging
+import uuid
+from dyndbmutex.dyndbmutex import DynamoDbMutex
 
 
 class RemoteSigner:
@@ -87,32 +88,45 @@ class RemoteSigner:
         return bitcoin.bin_to_b58check(sig, magicbyte=RemoteSigner.P256_SIGNATURE)
 
     def sign(self, handle, test_mode=False):
-        encoded_sig = ''
-        data_to_sign = self.payload
-        logging.info('About to sign {} with key handle {}'.format(data_to_sign, handle))
-        if self.valid_block_format(data_to_sign):
-            logging.info('Block format is valid')
-            if self.is_block() or self.is_endorsement():
-                logging.info('Preamble is valid')
-                if self.not_already_signed():
-                    if test_mode:
-                        return self.TEST_SIGNATURE
+        # This code acquires a mutex lock using https://github.com/chiradeep/dyndb-mutex
+        # generate a unique name for this process/thread
+        my_name = str(uuid.uuid4()).split("-")[0]
+        m = DynamoDbMutex('remote-signer', holder=my_name, timeoutms=60 * 1000)
+        locked = m.lock() # attempt to acquire the lock
+        if locked:
+            encoded_sig = ''
+            data_to_sign = self.payload
+            logging.info('About to sign {} with key handle {}'.format(data_to_sign, handle))
+            if self.valid_block_format(data_to_sign):
+                logging.info('Block format is valid')
+                if self.is_block() or self.is_endorsement():
+                    logging.info('Preamble is valid')
+                    if self.not_already_signed():
+                        if test_mode:
+                            return self.TEST_SIGNATURE
+                        else:
+                            logging.info('About to sign with HSM client. Slot = {}, lib = {}, handle = {}'.format(self.hsm_slot, self.hsm_libfile, handle))
+                            with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
+                                hashed_data = blake2b(hex_to_bytes(data_to_sign), digest_size=32).digest()
+                                logging.info('Hashed data to sign: {}'.format(hashed_data))
+                                sig = c.sign(handle=handle, data=hashed_data, mechanism=HsmMech.ECDSA)
+                                logging.info('Raw signature: {}'.format(sig))
+                                encoded_sig = RemoteSigner.b58encode_signature(sig)
+                                logging.info('Base58-encoded signature: {}'.format(encoded_sig))
                     else:
-                        logging.info('About to sign with HSM client. Slot = {}, lib = {}, handle = {}'.format(self.hsm_slot, self.hsm_libfile, handle))
-                        with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
-                            hashed_data = blake2b(hex_to_bytes(data_to_sign), digest_size=32).digest()
-                            logging.info('Hashed data to sign: {}'.format(hashed_data))
-                            sig = c.sign(handle=handle, data=hashed_data, mechanism=HsmMech.ECDSA)
-                            logging.info('Raw signature: {}'.format(sig))
-                            encoded_sig = RemoteSigner.b58encode_signature(sig)
-                            logging.info('Base58-encoded signature: {}'.format(encoded_sig))
+                        logging.error('Invalid level')
+                        m.release() # release the lock
+                        raise Exception('Invalid level')
                 else:
-                    logging.error('Invalid level')
-                    raise Exception('Invalid level')
+                    logging.error('Invalid preamble')
+                    m.release() # release the lock
+                    raise Exception('Invalid preamble')
             else:
-                logging.error('Invalid preamble')
-                raise Exception('Invalid preamble')
-        else:
-            logging.error('Invalid payload')
-            raise Exception('Invalid payload')
-        return encoded_sig
+                logging.error('Invalid payload')
+                m.release() # release the lock
+                raise Exception('Invalid payload')
+            m.release() # release the lock
+            return encoded_sig
+        else: # lock could not be acquired
+            logging.error('Could not acquire lock')
+            raise Exception('Could not acquire lock')
