@@ -3,6 +3,7 @@ boto3==1.7.39
 botocore==1.12.9
 click==6.7
 docutils==0.14
+dyndbmutex==0.3.1
 Flask==1.0.2
 itsdangerous==0.24
 Jinja2==2.10
@@ -14,4 +15,5 @@ python-dateutil==2.7.3
 s3transfer==0.1.13
 six==1.11.0
 urllib3==1.23
+uuid==1.30
 Werkzeug==0.14.1

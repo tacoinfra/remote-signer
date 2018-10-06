@@ -10,8 +10,10 @@ import boto3
 import os
 import time
 import decimal
+import uuid
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
+from dyndbmutex.dyndbmutex import DynamoDbMutex
 import logging
 
 # Helper class to convert a DynamoDB item to JSON.
@@ -35,40 +37,60 @@ class DynamoDBClient:
         self.level = level
 
     def CreateItem(self, keyname, key, value):
-        try:
-            put_response = self.table.put_item(
-                Item={
-                    keyname: key,
-                    'lastblock': value
-                }
-            )
-        except ClientError as err:
-            logging.error(err.response['Error']['Message'])
+        # This code acquires a mutex lock using https://github.com/chiradeep/dyndb-mutex
+        # generate a unique name for this process/thread
+        my_name = str(uuid.uuid4()).split("-")[0]
+        m = DynamoDbMutex(self.sig_type, holder=my_name, timeoutms=60 * 1000)
+        locked = m.lock() # attempt to acquire the lock
+        if locked:
+            try:
+                put_response = self.table.put_item(
+                    Item={
+                        keyname: key,
+                        'lastblock': value
+                    }
+                )
+            except ClientError as err:
+                logging.error(err.response['Error']['Message'])
+                m.release() # release the lock
+                return False
+            else:
+                logging.info("PutItem succeeded:")
+                logging.info(json.dumps(put_response, indent=4))
+                m.release() # release the lock
+                return True
+        else: # lock could not be acquired
             return False
-        else: 
-            logging.info("PutItem succeeded:")
-            logging.info(json.dumps(put_response, indent=4))
-            return True
 
     def UpdateItem(self, key, value):
-        try:
-            response = self.table.update_item(
-                Key={
-                    'type': key
-                },
-                UpdateExpression="set lastblock = :d",
-                ExpressionAttributeValues={
-                    ':d': value
-                },
-                ReturnValues="UPDATED_NEW"
-            )
-        except ClientError as err:
-            logging.error(err.response['Error']['Message'])
+        # This code acquires a mutex lock using https://github.com/chiradeep/dyndb-mutex
+        # generate a unique name for this process/thread
+        my_name = str(uuid.uuid4()).split("-")[0]
+        m = DynamoDbMutex(self.sig_type, holder=my_name, timeoutms=60 * 1000)
+        locked = m.lock() # attempt to acquire the lock
+        if locked:
+            try:
+                response = self.table.update_item(
+                    Key={
+                        'type': key
+                    },
+                    UpdateExpression="set lastblock = :d",
+                    ExpressionAttributeValues={
+                        ':d': value
+                    },
+                    ReturnValues="UPDATED_NEW"
+                )
+            except ClientError as err:
+                logging.error(err.response['Error']['Message'])
+                m.release() # release the lock
+                return False
+            else:
+                logging.info("UpdateItem succeeded:")
+                logging.info(json.dumps(response, indent=4, cls=DecimalEncoder))
+                m.release() # release the lock
+                return True
+        else: # lock could not be acquired
             return False
-        else:
-            logging.info("UpdateItem succeeded:")
-            logging.info(json.dumps(response, indent=4, cls=DecimalEncoder))
-            return True
 
     def check_double_signature(self):
         try:
