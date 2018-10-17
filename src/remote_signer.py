@@ -90,12 +90,13 @@ class RemoteSigner:
     def sign(self, handle, test_mode=False):
         # This code acquires a mutex lock using https://github.com/chiradeep/dyndb-mutex
         # generate a unique name for this process/thread
+        ddb_region = environ['REGION']
         my_name = str(uuid.uuid4()).split("-")[0]
         if self.is_block():
             sig_type = 'Baking'
         else:
             sig_type = 'Endorsement'
-        m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000)
+        m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000, region_name=ddb_region)
         locked = m.lock() # attempt to acquire the lock
         if locked:
             encoded_sig = ''
