@@ -23,7 +23,9 @@ class RemoteSigner:
     BLOCK_PREAMBLE = 1
     ENDORSEMENT_PREAMBLE = 2
     TEST_SIGNATURE = 'p2sigfqcE4b3NZwfmcoePgdFCvDgvUNa6DBp9h7SZ7wUE92cG3hQC76gfvistHBkFidj1Ymsi1ZcrNHrpEjPXQoQybAv6rRxke'
-    P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]  # results in p2sig prefix when encoded with base58
+    P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]  # results in p2sig prefix when encoded with base58 (p2sig(98))
+    CHAIN_ID = struct.unpack('>L', b'\x00\x57\x52\x00')[0] # results in Net prefix when encoded with base58 (Net(15))
+
 
     def __init__(self, config, payload='', rpc_stub=None):
         self.keys = config['keys']
@@ -69,12 +71,17 @@ class RemoteSigner:
         logging.info('Block level is {}'.format(level))
         return level
 
+    def get_chain_id(self):
+        chainid = bytes.fromhex(self.payload[2:10])
+        return bitcoin.bin_to_b58check(chainid, magicbyte=RemoteSigner.CHAIN_ID)
+
     def not_already_signed(self):
         payload_level = self.get_block_level()
+        payload_chainid = self.get_chain_id()
         if self.is_block():
-            sig_type = 'Baking'
+            sig_type = 'Baking_' + payload_chainid
         else:
-            sig_type = 'Endorsement'
+            sig_type = 'Endorsement_' + payload_chainid
         ddb = DynamoDBClient(self.ddb_region, self.ddb_table, sig_type, payload_level)
         not_signed = ddb.check_double_signature()
         if not_signed:
@@ -91,11 +98,12 @@ class RemoteSigner:
         # This code acquires a mutex lock using https://github.com/chiradeep/dyndb-mutex
         # generate a unique name for this process/thread
         ddb_region = environ['REGION']
+        payload_chainid = self.get_chain_id()
         my_name = str(uuid.uuid4()).split("-")[0]
         if self.is_block():
-            sig_type = 'Baking'
+            sig_type = 'Baking_' + payload_chainid
         else:
-            sig_type = 'Endorsement'
+            sig_type = 'Endorsement_' + payload_chainid
         m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000, region_name=ddb_region)
         locked = m.lock() # attempt to acquire the lock
         if locked:
