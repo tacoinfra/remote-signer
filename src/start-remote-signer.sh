@@ -38,7 +38,8 @@ load_password() {
 	export HSM_PASSWORD=`aws --region=$REGION ssm get-parameters \
 		--name /hsm/$HSMID/password \
 		--with-decryption \
-		--output text | cut -f 6`
+		--output text \
+		--query 'Parameters[*].Value'`
 	if [ $? -ne 0 ]
 	then
 		echo "SSM Error retrieving password"
