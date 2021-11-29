@@ -39,7 +39,6 @@ FLASK_APP=signer flask run
 
 ## Running the tests
 ```
-export HSM_PASSWORD=blah
 python -m unittest test/test_remote_signer.py
 ```
 

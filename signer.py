@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 from flask import Flask, request, Response, json, jsonify
-from src.remote_signer import RemoteSigner
+from src.validatesigner import ValidateSigner
 from src.ddbchainratchet import DDBChainRatchet
-from os import path
+from src.hsmsigner import HsmSigner
+from os import path, environ
 import logging
 
 logging.basicConfig(filename='./remote-signer.log', format='%(asctime)s %(message)s', level=logging.INFO)
@@ -45,9 +46,10 @@ def sign(key_hash):
             key = config['keys'][key_hash]
             logging.info('Attempting to sign {}'.format(data))
             cr = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'])
-            rs = RemoteSigner(config, payload=data, cr=cr).sign()
+            hsm = HsmSigner(config)
+            rs = ValidateSigner(config, ratchet=cr, subsigner=hsm)
             response = jsonify({
-                'signature': rs.sign(key['private_handle'])
+                'signature': rs.sign(key['private_handle'], data)
             })
             logging.info('Response is {}'.format(response))
         else:

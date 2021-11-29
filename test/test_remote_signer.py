@@ -3,13 +3,21 @@ import re
 import struct
 import unittest
 
+import bitcoin
+
 from src.sigreq import SignatureReq
-from src.remote_signer import RemoteSigner
+from src.validatesigner import ValidateSigner
+from src.signer import Signer
 from src.chainratchet import ChainRatchet, MockChainRatchet
 
 
 def eatwhite(str):
     return re.sub(r"\s+", "", str)
+
+# results in p2sig prefix when encoded with base58 (p2sig(98)):
+P256_SIG= struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]
+RAW_SIGNED_BLOCK = b'0123456789012345678901'
+SIGNED_BLOCK = bitcoin.bin_to_b58check(RAW_SIGNED_BLOCK, magicbyte=P256_SIG)
 
 #
 # Here's a quick invalid block that we'll make sure that we don't process:
@@ -40,11 +48,34 @@ valid_sig_reqs = [
 ]
 
 
+class MockHsmSigner:
+    def client():
+        return self
+
+    def sign(self, handle=None, data=None, mechanism=None):
+        return Signer.b58encode_signature(RAW_SIGNED_BLOCK)
+
+
 class TestRemoteSigner(unittest.TestCase):
+    TEST_CONFIG = {
+        'hsm_username': 'resigner',
+        'hsm_slot': 1,
+        'hsm_lib': '/opt/cloudhsm/lib/libcloudhsm_pkcs11.so',
+        'node_addr': 'http://node.internal:8732',
+        'keys': {
+            'tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW': {
+                'public_key': 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
+                'private_handle': 7,
+                'public_handle': 9
+            }
+        }
+    }
 
     def test_identifies_invalid_block_preamble(self):
         with self.assertRaises(Exception):
-            rs = RemoteSigner(self.TEST_CONFIG)
+            rs = ValidateSigner(self.TEST_CONFIG,
+                                ratchet=MockChainRatchet(0),
+                                hsm=MockHsmSigner())
             rs.sign(7, INVALID_PREAMBLE)
 
     def test_list_sigreqs(self):
@@ -55,6 +86,25 @@ class TestRemoteSigner(unittest.TestCase):
             self.assertEqual(req[0], got.type)
             self.assertEqual(req[1], got.chainid)
             self.assertEqual(req[2], got.level)
+
+            #
+            # Now, let's test mock signing.  Note, we only have one
+            # valid signature in the MockHsmSigner, but we are mainly
+            # testing to ensure that we are denied when we double bake:
+
+            rs = ValidateSigner(self.TEST_CONFIG,
+                                ratchet=MockChainRatchet(got.level-1),
+                                subsigner=MockHsmSigner())
+            self.assertEqual(rs.sign(7, req[3]), SIGNED_BLOCK)
+
+            #
+            # And now, for a failure:
+
+            with self.assertRaises(Exception):
+                    rs = ValidateSigner(self.TEST_CONFIG,
+                                        ratchet=MockChainRatchet(got.level),
+                                        subsigner=MockHsmSigner())
+                    rs.sign(7, req[3])
 
 
 if __name__ == '__main__':
