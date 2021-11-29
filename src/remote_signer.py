@@ -75,7 +75,7 @@ class RemoteSigner:
         chainid = bytes.fromhex(self.payload[2:10])
         return bitcoin.bin_to_b58check(chainid, magicbyte=RemoteSigner.CHAIN_ID)
 
-    def not_already_signed(self):
+    def already_signed(self):
         payload_level = self.get_block_level()
         payload_chainid = self.get_chain_id()
         if self.is_block():
@@ -88,7 +88,7 @@ class RemoteSigner:
             logging.info('{} signature for level {} has not been generated before'.format(sig_type, payload_level))
         else:
             logging.error('{} signature for level {} has already been generated!'.format(sig_type, payload_level))
-        return not_signed
+        return not not_signed
 
     @staticmethod
     def b58encode_signature(sig):
@@ -106,40 +106,36 @@ class RemoteSigner:
             sig_type = 'Endorsement_' + payload_chainid
         m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000, region_name=ddb_region)
         locked = m.lock() # attempt to acquire the lock
-        if locked:
-            encoded_sig = ''
-            data_to_sign = self.payload
-            logging.info('About to sign {} with key handle {}'.format(data_to_sign, handle))
-            if self.valid_block_format(data_to_sign):
-                logging.info('Block format is valid')
-                if self.is_block() or self.is_endorsement():
-                    logging.info('Preamble is valid')
-                    if self.not_already_signed():
-                        if test_mode:
-                            return self.TEST_SIGNATURE
-                        else:
-                            logging.info('About to sign with HSM client. Slot = {}, lib = {}, handle = {}'.format(self.hsm_slot, self.hsm_libfile, handle))
-                            with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
-                                hashed_data = blake2b(hex_to_bytes(data_to_sign), digest_size=32).digest()
-                                logging.info('Hashed data to sign: {}'.format(hashed_data))
-                                sig = c.sign(handle=handle, data=hashed_data, mechanism=HsmMech.ECDSA)
-                                logging.info('Raw signature: {}'.format(sig))
-                                encoded_sig = RemoteSigner.b58encode_signature(sig)
-                                logging.info('Base58-encoded signature: {}'.format(encoded_sig))
-                    else:
-                        logging.error('Invalid level')
-                        m.release() # release the lock
-                        raise Exception('Invalid level')
-                else:
-                    logging.error('Invalid preamble')
-                    m.release() # release the lock
-                    raise Exception('Invalid preamble')
-            else:
-                logging.error('Invalid payload')
-                m.release() # release the lock
-                raise Exception('Invalid payload')
-            m.release() # release the lock
-            return encoded_sig
-        else: # lock could not be acquired
+        locked = True
+        if not locked:
             logging.error('Could not acquire lock')
             raise Exception('Could not acquire lock')
+        encoded_sig = ''
+        data_to_sign = self.payload
+        logging.info('About to sign {} with key handle {}'.format(data_to_sign, handle))
+        if not self.valid_block_format(data_to_sign):
+            logging.error('Invalid payload')
+            m.release() # release the lock
+            raise Exception('Invalid payload')
+        logging.info('Block format is valid')
+        if not self.is_block() and not self.is_endorsement():
+            logging.error('Invalid preamble')
+            m.release() # release the lock
+            raise Exception('Invalid preamble')
+        logging.info('Preamble is valid')
+        if self.already_signed():
+            logging.error('Invalid level')
+            m.release() # release the lock
+            raise Exception('Invalid level')
+        if test_mode:
+            return self.TEST_SIGNATURE
+        logging.info('About to sign with HSM client. Slot = {}, lib = {}, handle = {}'.format(self.hsm_slot, self.hsm_libfile, handle))
+        with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile) as c:
+            hashed_data = blake2b(hex_to_bytes(data_to_sign), digest_size=32).digest()
+            logging.info('Hashed data to sign: {}'.format(hashed_data))
+            sig = c.sign(handle=handle, data=hashed_data, mechanism=HsmMech.ECDSA)
+            logging.info('Raw signature: {}'.format(sig))
+            encoded_sig = RemoteSigner.b58encode_signature(sig)
+            logging.info('Base58-encoded signature: {}'.format(encoded_sig))
+        m.release() # release the lock
+        return encoded_sig
