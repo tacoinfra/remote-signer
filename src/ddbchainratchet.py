@@ -12,6 +12,9 @@ import uuid
 
 from dyndbmutex.dyndbmutex import DynamoDbMutex
 
+from src.chainratchet import ChainRatchet
+
+
 # Helper class to convert a DynamoDB item to JSON.
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
@@ -22,15 +25,13 @@ class DecimalEncoder(json.JSONEncoder):
                 return int(o)
         return super(DecimalEncoder, self).default(o)
 
-class DynamoDBClient:
+class DDBChainRatchet(ChainRatchet):
 
-    def __init__(self, ddb_region, ddb_table, sig_type, level):
+    def __init__(self, ddb_region, ddb_table):
         self.REGION = ddb_region
         self.DDB_TABLE = ddb_table
         self.dynamodb = boto3.resource('dynamodb', region_name=self.REGION)
         self.table = self.dynamodb.Table(self.DDB_TABLE)
-        self.sig_type = sig_type
-        self.level = level
 
     def CreateItem(self, keyname, key, value):
         try:
@@ -68,47 +69,42 @@ class DynamoDBClient:
             logging.info(json.dumps(response, indent=4, cls=DecimalEncoder))
             return True
 
-    def check_dblsig_internal(self):
+    def check_locked(self, sig_type, level=0):
         try:
             get_response = self.table.get_item(
                 Key={
-                    'type': self.sig_type
+                    'type': sig_type
                 },
                 ConsistentRead=True
             )
         except ClientError as err:
             logging.error(err.response['Error']['Message'])
-            safe_to_sign = False
-        else: # get_item didn't fail, but did we get an item?
-            try:
-              item = get_response['Item']
-            except KeyError: # if get_response is empty, create an item in table
-                if self.CreateItem('type', self.sig_type, self.level):
-                    safe_to_sign = True
-                else:
-                    safe_to_sign = False
-            else:
-                logging.info("GetItem succeeded:")
-                logging.info(json.dumps(get_response, indent=4, cls=DecimalEncoder))
-                blocknum = get_response['Item']['lastblock']
-                logging.info("Current block height is " + str(blocknum))
-                if self.level <= blocknum:
-                    logging.error("Signature has already been generated for this block, exiting to prevent double "+self.sig_type)
-                    safe_to_sign = False
-                else:
-                    if self.UpdateItem(self.sig_type, self.level):
-                        safe_to_sign = True
-                    else:
-                        logging.error(self.sig_type + " signature for block number " + str(self.level) + " has not already been generated, but the update failed")
-                        safe_to_sign = False
-        return safe_to_sign
+            return False
 
-    def check_double_signature(self):
+        if 'Item' not in get_response:
+            return self.CreateItem('type', sig_type, level)
+
+        item = get_response['Item']
+        logging.info("GetItem succeeded:")
+        logging.info(json.dumps(get_response, indent=4, cls=DecimalEncoder))
+        self.lastlevel = item['lastblock']
+        logging.info(f"Current sig is {self.lastlevel}")
+        if not super().check(sig_type, level):
+            logging.error("Signature has already been generated for this block, exiting to prevent double "+ sig_type)
+            return False
+        else:
+            if self.UpdateItem(sig_type, level):
+                return True
+
+            logging.error(sig_type + " signature for block number " + str(level) + " has not already been generated, but the update failed")
+            return False
+
+    def check(self, sig_type, level=0):
         # This code acquires a mutex lock using:
         #      https://github.com/chiradeep/dyndb-mutex
         # generate a unique name for this process/thread
         my_name = str(uuid.uuid4()).split("-")[0]
-        m = DynamoDbMutex(self.sig_type, holder=my_name, timeoutms=60 * 1000,
+        m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000,
                           region_name=self.REGION)
         with m:
-            return self.check_dblsig_internal()
+            return self.check_locked(sig_type, level)
