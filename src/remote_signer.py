@@ -1,7 +1,6 @@
 
 import struct
 import string
-from src.dynamodb_client import DynamoDBClient
 from pyhsm.hsmclient import HsmClient, HsmAttribute
 from pyhsm.hsmenums import HsmMech
 from pyhsm.convert import hex_to_bytes, bytes_to_hex
@@ -20,13 +19,13 @@ class RemoteSigner:
     CHAIN_ID = struct.unpack('>L', b'\x00\x57\x52\x00')[0] # results in Net prefix when encoded with base58 (Net(15))
 
 
-    def __init__(self, config, payload='', rpc_stub=None):
+    def __init__(self, config, payload='', ratchet=None):
         self.keys = config['keys']
+        self.ratchet = ratchet
         self.payload = payload
         logging.info('Verifying payload')
         self.data = self.decode_block(self.payload)
         logging.info('Payload {} is valid'.format(self.data))
-        self.rpc_stub = rpc_stub
         self.hsm_slot = config['hsm_slot']
         hsm_user = config['hsm_username']
         logging.info('HSM user is {}'.format(config['hsm_username']))
@@ -36,9 +35,6 @@ class RemoteSigner:
         self.hsm_libfile = config['hsm_lib']
         logging.info('HSM lib is {}'.format(config['hsm_lib']))
         self.node_addr = config['node_addr']
-        # Add support for DynamoDB on 9-22-18 by LY
-        self.ddb_region = environ['REGION']
-        self.ddb_table = environ['DDB_TABLE']
 
     @staticmethod
     def valid_block_format(blockdata):
@@ -75,8 +71,7 @@ class RemoteSigner:
             sig_type = 'Baking_' + payload_chainid
         else:
             sig_type = 'Endorsement_' + payload_chainid
-        ddb = DynamoDBClient(self.ddb_region, self.ddb_table, sig_type, payload_level)
-        not_signed = ddb.check_double_signature()
+        not_signed = self.ratchet.check(sig_type, payload_level)
         if not_signed:
             logging.info('{} signature for level {} has not been generated before'.format(sig_type, payload_level))
         else:

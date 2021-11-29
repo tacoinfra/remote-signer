@@ -1,6 +1,7 @@
 
 import unittest
 from src.remote_signer import RemoteSigner
+from src.chainratchet import ChainRatchet, MockChainRatchet
 
 
 class TestRemoteSigner(unittest.TestCase):
@@ -40,11 +41,8 @@ class TestRemoteSigner(unittest.TestCase):
         self.assertEqual(rs.get_block_level(), 650)
 
     def test_signs_block(self):
-        class DummyRPCClient:
-            def get_current_level(self):
-                return 649
-
-        rs = RemoteSigner(self.TEST_CONFIG, self.VALID_BLOCK, DummyRPCClient())
+        rs = RemoteSigner(self.TEST_CONFIG, self.VALID_BLOCK,
+                          ratchet=MockChainRatchet())
         self.assertEqual(rs.sign(7, test_mode=True), self.SIGNED_BLOCK)
 
 

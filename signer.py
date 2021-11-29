@@ -2,6 +2,7 @@
 
 from flask import Flask, request, Response, json, jsonify
 from src.remote_signer import RemoteSigner
+from src.ddbchainratchet import DDBChainRatchet
 from os import path
 import logging
 
@@ -43,7 +44,8 @@ def sign(key_hash):
             logging.info('Found key_hash {} in config'.format(key_hash))
             key = config['keys'][key_hash]
             logging.info('Attempting to sign {}'.format(data))
-            rs = RemoteSigner(config, data)
+            cr = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'])
+            rs = RemoteSigner(config, payload=data, cr=cr).sign()
             response = jsonify({
                 'signature': rs.sign(key['private_handle'])
             })
