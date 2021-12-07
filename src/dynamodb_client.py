@@ -13,6 +13,9 @@ import decimal
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 import logging
+import uuid
+
+from dyndbmutex.dyndbmutex import DynamoDbMutex
 
 # Helper class to convert a DynamoDB item to JSON.
 class DecimalEncoder(json.JSONEncoder):
@@ -70,7 +73,7 @@ class DynamoDBClient:
             logging.info(json.dumps(response, indent=4, cls=DecimalEncoder))
             return True
 
-    def check_double_signature(self):
+    def check_dblsig_internal(self):
         try:
             get_response = self.table.get_item(
                 Key={
@@ -104,3 +107,13 @@ class DynamoDBClient:
                         logging.error(self.sig_type + " signature for block number " + str(self.level) + " has not already been generated, but the update failed")
                         safe_to_sign = False
         return safe_to_sign
+
+    def check_double_signature(self):
+        # This code acquires a mutex lock using:
+        #      https://github.com/chiradeep/dyndb-mutex
+        # generate a unique name for this process/thread
+        my_name = str(uuid.uuid4()).split("-")[0]
+        m = DynamoDbMutex(self.sig_type, holder=my_name, timeoutms=60 * 1000,
+                          region_name=self.REGION)
+        with m:
+            return self.check_dblsig_internal()

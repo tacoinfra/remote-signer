@@ -15,8 +15,6 @@ from os import environ
 import bitcoin
 from pyblake2 import blake2b
 import logging
-import uuid
-from dyndbmutex.dyndbmutex import DynamoDbMutex
 
 
 class RemoteSigner:
@@ -95,11 +93,7 @@ class RemoteSigner:
         return bitcoin.bin_to_b58check(sig, magicbyte=RemoteSigner.P256_SIGNATURE)
 
     def sign(self, handle, test_mode=False):
-        # This code acquires a mutex lock using https://github.com/chiradeep/dyndb-mutex
-        # generate a unique name for this process/thread
-        ddb_region = environ['REGION']
         payload_chainid = self.get_chain_id()
-        my_name = str(uuid.uuid4()).split("-")[0]
         if self.is_block():
             sig_type = 'Baking_' + payload_chainid
         else:
@@ -114,17 +108,14 @@ class RemoteSigner:
         logging.info('About to sign {} with key handle {}'.format(data_to_sign, handle))
         if not self.valid_block_format(data_to_sign):
             logging.error('Invalid payload')
-            m.release() # release the lock
             raise Exception('Invalid payload')
         logging.info('Block format is valid')
         if not self.is_block() and not self.is_endorsement():
             logging.error('Invalid preamble')
-            m.release() # release the lock
             raise Exception('Invalid preamble')
         logging.info('Preamble is valid')
         if self.already_signed():
             logging.error('Invalid level')
-            m.release() # release the lock
             raise Exception('Invalid level')
         if test_mode:
             return self.TEST_SIGNATURE
@@ -136,5 +127,4 @@ class RemoteSigner:
             logging.info('Raw signature: {}'.format(sig))
             encoded_sig = RemoteSigner.b58encode_signature(sig)
             logging.info('Base58-encoded signature: {}'.format(encoded_sig))
-        m.release() # release the lock
         return encoded_sig
