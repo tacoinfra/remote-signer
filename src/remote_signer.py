@@ -106,7 +106,6 @@ class RemoteSigner:
             sig_type = 'Endorsement_' + payload_chainid
         m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000, region_name=ddb_region)
         locked = m.lock() # attempt to acquire the lock
-        locked = True
         if not locked:
             logging.error('Could not acquire lock')
             raise Exception('Could not acquire lock')
