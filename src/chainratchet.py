@@ -7,12 +7,15 @@
 # is updated and True is returned. Otherwise, we return false.
 #
 # NOTE: the code that inherits from ChainRatchet is expected to
-#       keep self.lastlevel up to date before calling check().
+#       keep self.lastlevel and self.lastround up to date before
+#       calling check().
 
 
 class ChainRatchet:
-    def check(self, sig_type, level=0):
+    def check(self, sig_type, level=0, round=0):
         if self.lastlevel < level:
+            return True
+        if self.lastlevel == level and self.lastround < round:
             return True
         return False
 
@@ -22,11 +25,13 @@ class ChainRatchet:
 
 class MockChainRatchet(ChainRatchet):
 
-    def __init__(self, level=0):
+    def __init__(self, level=0, round=0):
         self.lastlevel = level
+        self.lastround = round
 
-    def check(self, sig_type, level=0):
-        if not super().check(sig_type, level):
+    def check(self, sig_type, level=0, round=0):
+        if not super().check(sig_type, level, round):
             return False
         self.lastlevel = level
+        self.lastround = round
         return True

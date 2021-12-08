@@ -25,10 +25,29 @@ class SignatureReq:
         if data[0] == 0x01:     # Emmy block
             self.type  = "Baking"
             self.level = get_be_int(data[5:])
+            self.round = 0
 
         elif data[0] == 0x02:   # Emmy endorsement
             self.type  = "Endorsement"
             self.level = get_be_int(data[-4:])
+            self.round = 0
+
+        elif data[0] == 0x11:   # Tenderbake block
+            self.type  = "Baking"
+            self.level = get_be_int(data[5:])
+            fitness_sz = get_be_int(data[83:])
+            offset = 87 + fitness_sz - 4
+            self.round = get_be_int(data[offset:])
+
+        elif data[0] == 0x12:   # Tenderbake preendorsement
+            self.type  = "Preendorsement"
+            self.level = get_be_int(data[40:])
+            self.round = get_be_int(data[44:])
+
+        elif data[0] == 0x13:   # Tenderbake endorsement
+            self.type  = "Endorsement"
+            self.level = get_be_int(data[40:])
+            self.round = get_be_int(data[44:])
 
         else:
             raise(Exception('Invalid signature request tag'))
@@ -41,3 +60,6 @@ class SignatureReq:
 
     def get_level(self):
         return self.level
+
+    def get_round(self):
+        return self.round
