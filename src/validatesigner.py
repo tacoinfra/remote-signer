@@ -15,7 +15,8 @@ class ValidateSigner:
         self.node_addr = config['node_addr']
 
     def already_signed(self, sig_type):
-        not_signed = self.ratchet.check(sig_type, self.sigreq.get_level())
+        not_signed = self.ratchet.check(sig_type, self.sigreq.get_level(),
+                                        self.sigreq.get_round())
         if not_signed:
             logging.info('{} signature for level {} has not been generated before'.format(sig_type, self.sigreq.get_level()))
         else:
