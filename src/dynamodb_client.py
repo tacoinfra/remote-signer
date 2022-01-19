@@ -1,8 +1,3 @@
-#########################################################
-# Written by Luke Youngblood, luke@blockscale.net
-# Copyright (c) 2018 Blockscale LLC
-# released under the MIT license
-#########################################################
 
 from __future__ import print_function # Python 2/3 compatibility
 import json

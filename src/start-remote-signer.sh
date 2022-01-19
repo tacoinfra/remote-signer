@@ -1,6 +1,5 @@
 #!/bin/sh
 # Starts the Remote Signer
-# Written by Luke Youngblood, luke@blockscale.net
 # -----------------------------------------------------------------------
 # Requires the following environment variables to be set
 # $REGION = the AWS region where the remote signer is deployed

@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 
-#########################################################
-# Written by Carl Youngblood, carl@blockscale.net
-# Copyright (c) 2018 Blockscale LLC
-# released under the MIT license
-#########################################################
-
 from flask import Flask, request, Response, json, jsonify
 from src.remote_signer import RemoteSigner
 from os import path
