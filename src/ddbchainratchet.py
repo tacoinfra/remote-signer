@@ -96,13 +96,16 @@ class DDBChainRatchet(ChainRatchet):
             self.lastround = 0
         logging.info(f"Current sig is {self.lastlevel}/{self.lastround}")
         if not super().check(sig_type, level, round):
-            logging.error("Signature has already been generated for this block, exiting to prevent double "+ sig_type)
+            logging.error("Signature has already been generated for this " +
+                          "block, exiting to prevent double "+ sig_type)
             return False
         else:
             if self.UpdateItem(sig_type, level, round):
                 return True
 
-            logging.error(sig_type + " signature for block number " + str(level) + " has not already been generated, but the update failed")
+            logging.error(sig_type + " signature for block number " +
+                          str(level) + " has not already been generated, " +
+                          "but the update failed")
             return False
 
     def check(self, sig_type, level=0, round=0):
