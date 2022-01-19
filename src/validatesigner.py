@@ -17,10 +17,11 @@ class ValidateSigner:
     def already_signed(self, sig_type):
         not_signed = self.ratchet.check(sig_type, self.sigreq.get_level(),
                                         self.sigreq.get_round())
+        log_msg = f'{sig_type} signature for level {self.sigreq.get_level()}'
         if not_signed:
-            logging.info('{} signature for level {} has not been generated before'.format(sig_type, self.sigreq.get_level()))
+            logging.info(log_msg  + ' has not been generated before')
         else:
-            logging.error('{} signature for level {} has already been generated!'.format(sig_type, self.sigreq.get_level()))
+            logging.error(log_msg + ' has already been generated!')
         return not not_signed
 
     def sign(self, handle, payload):

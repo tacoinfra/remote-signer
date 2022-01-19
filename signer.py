@@ -7,7 +7,9 @@ from src.hsmsigner import HsmSigner
 from os import path, environ
 import logging
 
-logging.basicConfig(filename='./remote-signer.log', format='%(asctime)s %(message)s', level=logging.INFO)
+logging.basicConfig(filename='./remote-signer.log',
+                    format='%(asctime)s %(message)s',
+                    level=logging.INFO)
 
 app = Flask(__name__)
 
@@ -19,7 +21,8 @@ config = {
     'node_addr': 'http://node.internal:8732',
     'keys': {
         'tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW': {
-            'public_key': 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
+            'public_key':
+                'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
             'private_handle': 7,
             'public_handle': 9
         }
@@ -33,7 +36,7 @@ if path.isfile('keys.json'):
         json_blob = myfile.read().replace('\n', '')
         logging.info('Parsed keys.json successfully as JSON')
         config = json.loads(json_blob)
-        logging.info('Config contains: {}'.format(json.dumps(config, indent=2)))
+        logging.info(f"Config contains: {json.dumps(config, indent=2)}")
 
 
 @app.route('/keys/<key_hash>', methods=['POST'])
@@ -42,28 +45,28 @@ def sign(key_hash):
     try:
         data = request.get_json(force=True)
         if key_hash in config['keys']:
-            logging.info('Found key_hash {} in config'.format(key_hash))
+            logging.info(f'Found key_hash {key_hash} in config')
             key = config['keys'][key_hash]
-            logging.info('Attempting to sign {}'.format(data))
+            logging.info(f'Attempting to sign {data}')
             cr = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'])
             hsm = HsmSigner(config)
             rs = ValidateSigner(config, ratchet=cr, subsigner=hsm)
             response = jsonify({
                 'signature': rs.sign(key['private_handle'], data)
             })
-            logging.info('Response is {}'.format(response))
+            logging.info(f'Response is {response}')
         else:
-            logging.warning("Couldn't find key {}".format(key_hash))
+            logging.warning(f"Couldn't find key {key_hash}")
             response = Response('Key not found', status=404)
     except Exception as e:
         data = {'error': str(e)}
-        logging.error('Exception thrown during request: {}'.format(str(e)))
+        logging.error(f'Exception thrown during request: {str(e)}')
         response = app.response_class(
             response=json.dumps(data),
             status=500,
             mimetype='application/json'
         )
-    logging.info('Returning flask response {}'.format(response))
+    logging.info(f'Returning flask response {response}')
     return response
 
 
@@ -76,19 +79,19 @@ def get_public_key(key_hash):
             response = jsonify({
                 'public_key': key['public_key']
             })
-            logging.info('Found public key {} for key hash {}'.format(key['public_key'], key_hash))
+            logging.info(f"Found PK {key['public_key']} for hash {key_hash}")
         else:
-            logging.warning("Couldn't public key for key hash {}".format(key_hash))
+            logging.warning(f"Couldn't public key for hash {key_hash}")
             response = Response('Key not found', status=404)
     except Exception as e:
         data = {'error': str(e)}
-        logging.error('Exception thrown during request: {}'.format(str(e)))
+        logging.error(f'Exception thrown during request: {str(e)}')
         response = app.response_class(
             response=json.dumps(data),
             status=500,
             mimetype='application/json'
         )
-    logging.info('Returning flask response {}'.format(response))
+    logging.info(f'Returning flask response {response}')
     return response
 
 
