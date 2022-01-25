@@ -10,7 +10,8 @@ from botocore.exceptions import ClientError
 import logging
 import uuid
 
-from dyndbmutex.dyndbmutex import DynamoDbMutex
+from werkzeug.exceptions import abort
+from dyndbmutex.dyndbmutex import DynamoDbMutex, AcquireLockFailedError
 
 from src.chainratchet import ChainRatchet
 
@@ -43,8 +44,9 @@ class DDBChainRatchet(ChainRatchet):
                 }
             )
         except ClientError as err:
-            logging.error(err.response['Error']['Message'])
-            return False
+            logging.error("DynamoDB error during CreateItem: " +
+                          err.response['Error']['Message'])
+            abort(500, "DB error")
         else: 
             logging.info("PutItem succeeded:")
             logging.info(json.dumps(put_response, indent=4))
@@ -64,8 +66,9 @@ class DDBChainRatchet(ChainRatchet):
                 ReturnValues="UPDATED_NEW"
             )
         except ClientError as err:
-            logging.error(err.response['Error']['Message'])
-            return False
+            logging.error("DynamoDB error during UpdateItem: " +
+                          err.response['Error']['Message'])
+            abort(500, "DB error")
         else:
             logging.info("UpdateItem succeeded:")
             logging.info(json.dumps(response, indent=4, cls=DecimalEncoder))
@@ -80,8 +83,9 @@ class DDBChainRatchet(ChainRatchet):
                 ConsistentRead=True
             )
         except ClientError as err:
-            logging.error(err.response['Error']['Message'])
-            return False
+            logging.error("DynamoDB error during GetItem: " +
+                          err.response['Error']['Message'])
+            abort(500, "DB error")
 
         if 'Item' not in get_response:
             return self.CreateItem('type', sig_type, level, round)
@@ -95,18 +99,10 @@ class DDBChainRatchet(ChainRatchet):
         else:
             self.lastround = 0
         logging.info(f"Current sig is {self.lastlevel}/{self.lastround}")
-        if not super().check(sig_type, level, round):
-            logging.error("Signature has already been generated for this " +
-                          "block, exiting to prevent double "+ sig_type)
-            return False
-        else:
-            if self.UpdateItem(sig_type, level, round):
-                return True
 
-            logging.error(sig_type + " signature for block number " +
-                          str(level) + " has not already been generated, " +
-                          "but the update failed")
-            return False
+        super().check(sig_type, level, round)
+
+        return self.UpdateItem(sig_type, level, round)
 
     def check(self, sig_type, level=0, round=0):
         # This code acquires a mutex lock using:
@@ -115,5 +111,9 @@ class DDBChainRatchet(ChainRatchet):
         my_name = str(uuid.uuid4()).split("-")[0]
         m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000,
                           region_name=self.REGION)
-        with m:
-            return self.check_locked(sig_type, level, round)
+        try:
+            with m:
+                return self.check_locked(sig_type, level, round)
+        except AcquireLockFailedError:
+            abort(503, "Failed to obtain DB lock")
+

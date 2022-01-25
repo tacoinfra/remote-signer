@@ -21,4 +21,4 @@ class Signer:
         return bitcoin.bin_to_b58check(sig, magicbyte=P256_SIGNATURE)
 
     def sign(self, handle, payload):
-        raise("Unimplemented virtual method")
+        raise(NotImplementedError("Unimplemented virtual method"))
