@@ -46,7 +46,7 @@ class SignatureReq:
             self.round = get_be_int(data[44:])
 
         else:
-            raise(Exception('Invalid signature request tag'))
+            raise(Exception('Unsupported signature request tag'))
 
     def get_type(self):
         return self.type
