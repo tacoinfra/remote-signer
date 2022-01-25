@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from flask import Flask, request, Response, json, jsonify
+from werkzeug.exceptions import HTTPException
 from src.validatesigner import ValidateSigner
 from src.ddbchainratchet import DDBChainRatchet
 from src.hsmsigner import HsmSigner
@@ -62,6 +63,9 @@ def sign(key_hash):
         else:
             logging.warning(f"Couldn't find key {key_hash}")
             response = Response('Key not found', status=404)
+    except HTTPException as e:
+        logging.error(e)
+        raise
     except Exception as e:
         data = {'error': str(e)}
         logging.error(f'Exception thrown during request: {str(e)}')
