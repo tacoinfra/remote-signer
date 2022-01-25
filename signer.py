@@ -38,6 +38,13 @@ if path.isfile('keys.json'):
         config = json.loads(json_blob)
         logging.info(f"Config contains: {json.dumps(config, indent=2)}")
 
+#
+# We keep the ChainRatchet, HSM, and ValidateSigner outside sign()
+# so that they persist.
+
+cr  = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'])
+hsm = HsmSigner(config)
+rs  = ValidateSigner(config, ratchet=cr, subsigner=hsm)
 
 @app.route('/keys/<key_hash>', methods=['POST'])
 def sign(key_hash):
@@ -48,9 +55,6 @@ def sign(key_hash):
             logging.info(f'Found key_hash {key_hash} in config')
             key = config['keys'][key_hash]
             logging.info(f'Attempting to sign {data}')
-            cr = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'])
-            hsm = HsmSigner(config)
-            rs = ValidateSigner(config, ratchet=cr, subsigner=hsm)
             response = jsonify({
                 'signature': rs.sign(key['private_handle'], data)
             })
