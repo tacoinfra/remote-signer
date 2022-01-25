@@ -9,7 +9,7 @@ from os import path, environ
 import logging
 
 logging.basicConfig(filename='./remote-signer.log',
-                    format='%(asctime)s %(message)s',
+                    format='%(asctime)s %(threadName)s %(message)s',
                     level=logging.INFO)
 
 app = Flask(__name__)
@@ -30,14 +30,11 @@ config = {
     }
 }
 
-logging.info('Opening keys.json')
 if path.isfile('keys.json'):
-    logging.info('Found keys.json')
     with open('keys.json', 'r') as myfile:
         json_blob = myfile.read().replace('\n', '')
-        logging.info('Parsed keys.json successfully as JSON')
         config = json.loads(json_blob)
-        logging.info(f"Config contains: {json.dumps(config, indent=2)}")
+        logging.info(f"Loaded config contains: {json.dumps(config, indent=2)}")
 
 #
 # We keep the ChainRatchet, HSM, and ValidateSigner outside sign()
@@ -53,13 +50,10 @@ def sign(key_hash):
     try:
         data = request.get_json(force=True)
         if key_hash in config['keys']:
-            logging.info(f'Found key_hash {key_hash} in config')
             key = config['keys'][key_hash]
-            logging.info(f'Attempting to sign {data}')
             response = jsonify({
                 'signature': rs.sign(key['private_handle'], data)
             })
-            logging.info(f'Response is {response}')
         else:
             logging.warning(f"Couldn't find key {key_hash}")
             response = Response('Key not found', status=404)
@@ -74,7 +68,6 @@ def sign(key_hash):
             status=500,
             mimetype='application/json'
         )
-    logging.info(f'Returning flask response {response}')
     return response
 
 
@@ -87,7 +80,6 @@ def get_public_key(key_hash):
             response = jsonify({
                 'public_key': key['public_key']
             })
-            logging.info(f"Found PK {key['public_key']} for hash {key_hash}")
         else:
             logging.warning(f"Couldn't public key for hash {key_hash}")
             response = Response('Key not found', status=404)
@@ -99,7 +91,6 @@ def get_public_key(key_hash):
             status=500,
             mimetype='application/json'
         )
-    logging.info(f'Returning flask response {response}')
     return response
 
 

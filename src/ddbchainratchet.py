@@ -11,6 +11,7 @@ from dyndbmutex.dyndbmutex import DynamoDbMutex, AcquireLockFailedError
 
 from src.chainratchet import ChainRatchet
 
+logging.getLogger('dyndbmutex').setLevel(logging.CRITICAL)
 
 # Helper class to convert a DynamoDB item to JSON.
 class DecimalEncoder(json.JSONEncoder):
@@ -44,8 +45,8 @@ class DDBChainRatchet(ChainRatchet):
                           err.response['Error']['Message'])
             abort(500, "DB error")
         else: 
-            logging.info("PutItem succeeded:")
-            logging.info(json.dumps(put_response, indent=4))
+            logging.debug("PutItem succeeded: " +
+                          json.dumps(put_response, indent=4))
             return True
 
     def UpdateItem(self, key, level, round):
@@ -66,8 +67,8 @@ class DDBChainRatchet(ChainRatchet):
                           err.response['Error']['Message'])
             abort(500, "DB error")
         else:
-            logging.info("UpdateItem succeeded:")
-            logging.info(json.dumps(response, indent=4, cls=DecimalEncoder))
+            logging.debug("UpdateItem succeeded: " +
+                          json.dumps(response, indent=4, cls=DecimalEncoder))
             return True
 
     def check_locked(self, sig_type, level=0, round=0):
@@ -87,14 +88,15 @@ class DDBChainRatchet(ChainRatchet):
             return self.CreateItem('type', sig_type, level, round)
 
         item = get_response['Item']
-        logging.info("GetItem succeeded:")
-        logging.info(json.dumps(get_response, indent=4, cls=DecimalEncoder))
+        logging.debug("GetItem succeeded: " +
+                      json.dumps(get_response, indent=4, cls=DecimalEncoder))
         self.lastlevel = item['lastblock']
         if 'lastround' in item:
             self.lastround = item['lastround']
         else:
             self.lastround = 0
-        logging.info(f"Current sig is {self.lastlevel}/{self.lastround}")
+
+        logging.debug(f"Current sig is {self.lastlevel}/{self.lastround}")
 
         super().check(sig_type, level, round)
 

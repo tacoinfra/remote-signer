@@ -17,27 +17,24 @@ class HsmSigner(Signer):
     def __init__(self, config):
         self.hsm_slot = config['hsm_slot']
         hsm_user = config['hsm_username']
-        logging.info(f"HSM user is {config['hsm_username']}")
-        logging.info('Attempting to read env var HSM_PASSWORD')
         hsm_password = environ['HSM_PASSWORD']
         self.hsm_pin = f'{hsm_user}:{hsm_password}'
         self.hsm_libfile = config['hsm_lib']
-        logging.info(f"HSM lib is {config['hsm_lib']}")
 
     def sign(self, handle, payload):
-        logging.info(f'Signing with HSM client:')
-        logging.info(f'    Slot = {self.hsm_slot}')
-        logging.info(f'    lib = {self.hsm_libfile}')
-        logging.info(f'    handle = {handle}')
+        logging.debug(f'Signing with HSM client:')
+        logging.debug(f'    Slot = {self.hsm_slot}')
+        logging.debug(f'    lib = {self.hsm_libfile}')
+        logging.debug(f'    handle = {handle}')
         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin,
                        pkcs11_lib=self.hsm_libfile) as c:
             hashed_data = blake2b(hex_to_bytes(payload),
                                   digest_size=32).digest()
-            logging.info(f'Hashed data to sign: {hashed_data}')
+            logging.debug(f'Hashed data to sign: {hashed_data}')
             sig = c.sign(handle=handle, data=hashed_data,
                          mechanism=HsmMech.ECDSA)
 
-        logging.info(f'Raw signature: {sig}')
+        logging.debug(f'Raw signature: {sig}')
         encoded_sig = Signer.b58encode_signature(sig)
-        logging.info(f'Base58-encoded signature: {encoded_sig}')
+        logging.debug(f'Base58-encoded signature: {encoded_sig}')
         return encoded_sig
