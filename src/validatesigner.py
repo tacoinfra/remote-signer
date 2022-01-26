@@ -4,9 +4,6 @@
 # parse the request and to obtain the level and round to pass to the
 # ratchet code.
 
-import struct
-from binascii import unhexlify
-from os import environ
 import logging
 
 from src.sigreq import SignatureReq
