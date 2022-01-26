@@ -4,9 +4,9 @@
 import logging
 from os import environ
 
-from pyhsm.hsmclient import HsmClient, HsmAttribute
+from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmMech
-from pyhsm.convert import hex_to_bytes, bytes_to_hex
+from pyhsm.convert import hex_to_bytes
 
 from pyblake2 import blake2b
 

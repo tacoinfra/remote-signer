@@ -1,11 +1,7 @@
 import struct
 import string
 
-from binascii import unhexlify
-from os import environ
-
 import bitcoin
-from pyblake2 import blake2b
 
 def get_be_int(bytes):
     return struct.unpack('>L', bytes[0:4])[0]

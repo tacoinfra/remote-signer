@@ -8,7 +8,7 @@ import bitcoin
 from src.sigreq import SignatureReq
 from src.validatesigner import ValidateSigner
 from src.signer import Signer
-from src.chainratchet import ChainRatchet, MockChainRatchet
+from src.chainratchet import MockChainRatchet
 
 
 def eatwhite(str):
@@ -80,9 +80,6 @@ valid_sig_reqs = [
 
 
 class MockHsmSigner:
-    def client():
-        return self
-
     def sign(self, handle=None, data=None, mechanism=None):
         return Signer.b58encode_signature(RAW_SIGNED_BLOCK)
 

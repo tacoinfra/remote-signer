@@ -6,7 +6,6 @@
 import struct
 
 import bitcoin
-from pyblake2 import blake2b
 
 # results in p2sig prefix when encoded with base58 (p2sig(98)):
 P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]
