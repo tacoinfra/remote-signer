@@ -16,16 +16,14 @@ class ValidateSigner:
         self.subsigner = subsigner
         self.node_addr = config['node_addr']
 
-    def sign(self, handle, payload):
-        self.sigreq = SignatureReq(payload)
-        sig_type = f"{self.sigreq.get_type()}_{self.sigreq.get_chainid()}"
-        logging.debug(f"About to sign {payload} with key handle {handle}")
+    def sign(self, handle, sigreq):
+        sig_type = f"{sigreq.get_type()}_{sigreq.get_chainid()}"
+        logging.debug(f"About to sign {sigreq.get_payload()} " +
+                      f"with key handle {handle}")
 
-        level = self.sigreq.get_level()
-        round = self.sigreq.get_round()
-
-        logging.info(f"Received request to sign at {level}/{round}")
+        level = sigreq.get_level()
+        round = sigreq.get_round()
 
         self.ratchet.check(sig_type, level, round)
 
-        return self.subsigner.sign(handle, payload)
+        return self.subsigner.sign(handle, sigreq)

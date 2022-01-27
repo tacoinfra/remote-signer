@@ -14,6 +14,7 @@ class SignatureReq:
         if not all(c in string.hexdigits for c in hexdata):
             raise('Invalid signature request: not all hex digits')
 
+        self.payload = hexdata
         data = bytes.fromhex(hexdata)
 
         self.chainid = bitcoin.bin_to_b58check(data[1:5], magicbyte=CHAIN_ID)
@@ -47,6 +48,9 @@ class SignatureReq:
 
         else:
             raise(Exception('Unsupported signature request tag'))
+
+    def get_payload(self):
+        return self.payload
 
     def get_type(self):
         return self.type
