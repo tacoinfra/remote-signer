@@ -21,14 +21,14 @@ class HsmSigner(Signer):
         self.hsm_pin = f'{hsm_user}:{hsm_password}'
         self.hsm_libfile = config['hsm_lib']
 
-    def sign(self, handle, payload):
+    def sign(self, handle, sigreq):
         logging.debug(f'Signing with HSM client:')
         logging.debug(f'    Slot = {self.hsm_slot}')
         logging.debug(f'    lib = {self.hsm_libfile}')
         logging.debug(f'    handle = {handle}')
         with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin,
                        pkcs11_lib=self.hsm_libfile) as c:
-            hashed_data = blake2b(hex_to_bytes(payload),
+            hashed_data = blake2b(hex_to_bytes(sigreq.get_payload()),
                                   digest_size=32).digest()
             logging.debug(f'Hashed data to sign: {hashed_data}')
             sig = c.sign(handle=handle, data=hashed_data,

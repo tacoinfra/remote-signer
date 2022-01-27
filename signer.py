@@ -2,11 +2,20 @@
 
 from flask import Flask, request, Response, json, jsonify
 from werkzeug.exceptions import HTTPException
+from src.sigreq import SignatureReq
 from src.validatesigner import ValidateSigner
 from src.ddbchainratchet import DDBChainRatchet
 from src.hsmsigner import HsmSigner
 from os import path, environ
 import logging
+
+def logreq(sigreq, msg):
+    if sigreq != None:
+        chainid = sigreq.get_chainid()
+        type = sigreq.get_type()
+        level = sigreq.get_level()
+        round = sigreq.get_round()
+        logging.info(f"Request: {chainid} {type} at {level}/{round}:{msg}")
 
 logging.basicConfig(filename='./remote-signer.log',
                     format='%(asctime)s %(threadName)s %(message)s',
@@ -47,13 +56,14 @@ rs  = ValidateSigner(config, ratchet=cr, subsigner=hsm)
 @app.route('/keys/<key_hash>', methods=['GET', 'POST'])
 def sign(key_hash):
     response = None
+    sigreq = None
     try:
         if key_hash in config['keys']:
             key = config['keys'][key_hash]
             if request.method == 'POST':
-                data = request.get_json(force=True)
+                sigreq = SignatureReq(request.get_json(force=True))
                 response = jsonify({
-                    'signature': rs.sign(key['private_handle'], data)
+                    'signature': rs.sign(key['private_handle'], sigreq)
                 })
             else:
                 response = jsonify({ 'public_key': key['public_key'] })
@@ -62,6 +72,7 @@ def sign(key_hash):
             response = Response('Key not found', status=404)
     except HTTPException as e:
         logging.error(e)
+        logreq(sigreq, "Failed")
         raise
     except Exception as e:
         data = {'error': str(e)}
@@ -71,6 +82,11 @@ def sign(key_hash):
             status=500,
             mimetype='application/json'
         )
+        logreq(sigreq, "Failed")
+        return response
+
+    logreq(sigreq, "Success")
+
     return response
 
 

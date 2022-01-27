@@ -104,7 +104,7 @@ class TestRemoteSigner(unittest.TestCase):
             rs = ValidateSigner(self.TEST_CONFIG,
                                 ratchet=MockChainRatchet(0, 0),
                                 hsm=MockHsmSigner())
-            rs.sign(7, INVALID_PREAMBLE)
+            rs.sign(7, SignatureReq(INVALID_PREAMBLE))
 
     def test_list_sigreqs(self):
         for req in valid_sig_reqs:
@@ -125,14 +125,14 @@ class TestRemoteSigner(unittest.TestCase):
                                 ratchet=MockChainRatchet(level=got.level-1,
                                                          round=0),
                                 subsigner=MockHsmSigner())
-            self.assertEqual(rs.sign(7, req[4]), SIGNED_BLOCK)
+            self.assertEqual(rs.sign(7, SignatureReq(req[4])), SIGNED_BLOCK)
 
             if got.round > 0:
                 rs = ValidateSigner(self.TEST_CONFIG,
                                     ratchet=MockChainRatchet(level=got.level,
                                                              round=got.round-1),
                                     subsigner=MockHsmSigner())
-                self.assertEqual(rs.sign(7, req[4]), SIGNED_BLOCK)
+                self.assertEqual(rs.sign(7, SignatureReq(req[4])), SIGNED_BLOCK)
 
             #
             # And now, for a failure:
@@ -142,7 +142,7 @@ class TestRemoteSigner(unittest.TestCase):
                                         ratchet=MockChainRatchet(got.level,
                                                                  got.round),
                                         subsigner=MockHsmSigner())
-                    rs.sign(7, req[4])
+                    rs.sign(7, SignatureReq(req[4]))
 
 
 if __name__ == '__main__':
