@@ -41,7 +41,3 @@ FLASK_APP=signer flask run
 ```
 python -m unittest test/test_remote_signer.py
 ```
-
-## Assistance
-
-If you would like assistance implementing this in a production/secure environment, with high availability, authentication, and authorization, please contact us at contact -at- blockscale.net.
