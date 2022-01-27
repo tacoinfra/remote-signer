@@ -44,45 +44,25 @@ cr  = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'])
 hsm = HsmSigner(config)
 rs  = ValidateSigner(config, ratchet=cr, subsigner=hsm)
 
-@app.route('/keys/<key_hash>', methods=['POST'])
+@app.route('/keys/<key_hash>', methods=['GET', 'POST'])
 def sign(key_hash):
     response = None
     try:
-        data = request.get_json(force=True)
         if key_hash in config['keys']:
             key = config['keys'][key_hash]
-            response = jsonify({
-                'signature': rs.sign(key['private_handle'], data)
-            })
+            if request.method == 'POST':
+                data = request.get_json(force=True)
+                response = jsonify({
+                    'signature': rs.sign(key['private_handle'], data)
+                })
+            else:
+                response = jsonify({ 'public_key': key['public_key'] })
         else:
             logging.warning(f"Couldn't find key {key_hash}")
             response = Response('Key not found', status=404)
     except HTTPException as e:
         logging.error(e)
         raise
-    except Exception as e:
-        data = {'error': str(e)}
-        logging.error(f'Exception thrown during request: {str(e)}')
-        response = app.response_class(
-            response=json.dumps(data),
-            status=500,
-            mimetype='application/json'
-        )
-    return response
-
-
-@app.route('/keys/<key_hash>', methods=['GET'])
-def get_public_key(key_hash):
-    response = None
-    try:
-        if key_hash in config['keys']:
-            key = config['keys'][key_hash]
-            response = jsonify({
-                'public_key': key['public_key']
-            })
-        else:
-            logging.warning(f"Couldn't public key for hash {key_hash}")
-            response = Response('Key not found', status=404)
     except Exception as e:
         data = {'error': str(e)}
         logging.error(f'Exception thrown during request: {str(e)}')
