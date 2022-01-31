@@ -39,5 +39,5 @@ FLASK_APP=signer flask run
 
 ## Running the tests
 ```
-python -m unittest test/test_remote_signer.py
+make check
 ```
