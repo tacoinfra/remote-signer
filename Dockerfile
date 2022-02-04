@@ -15,14 +15,14 @@ RUN	TOP=https://s3.amazonaws.com/cloudhsmv2-software/CloudHsmClient	\
 		rm -f "$i";						\
 	done
 
-RUN \
-	/opt/cloudhsm/bin/configure -a hsm.internal && \
-	pip3 install -r /requirements.txt && \
-	chmod 755 /src/start-remote-signer.sh && \
-	yum clean all
+COPY requirements.txt /
+RUN pip3 install -r /requirements.txt && \
+  /opt/cloudhsm/bin/configure -a hsm.internal && \
+  yum clean all
 
 COPY src/. /src/
+RUN chmod 755 /src/start-remote-signer.sh
+
 COPY signer.py /
-COPY requirements.txt /
 
 ENTRYPOINT ["/src/start-remote-signer.sh"]
