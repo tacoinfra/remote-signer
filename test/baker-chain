@@ -1,0 +1,129 @@
+#!/bin/sh
+
+#
+# This script will find and emit all baking activity associated with a
+# particular address.  This includes being the baker, endorsing, and
+# evidence of duplicitous behaviour, namely double baking, endorsing
+# or pre-endorsing.  As we analyse the chain, it only counts if you get
+# caught...
+#
+# We make a few assumptions about the structure of JSON returned from
+# our queries.  Most importantly, that all operation kinds that involve
+# slashing end in the string "evidence" and no operation kind which doesn't
+# involve slashing will end in said string.
+
+gen_line() {
+	TOP="$1"
+	CUR="$2"
+	MATCH="$3"
+
+	PREV="$(expr $CUR - 1)"
+
+	curl -s	"$TOP/$PREV/helpers/baking_rights"	\
+		"$TOP/$PREV/helpers/endorsing_rights"	\
+		"$TOP/$CUR"				\
+	| jq --slurp --arg my_baker "$MATCH" -c '
+		def match_kind(n):
+			.operations[][].contents[]
+			|select(.kind|match(n));
+
+		def from_balance_updates(n):
+			match_kind(n)
+				| [ .kind, (.
+				|.metadata.balance_updates[]
+				|select(.category == "deposits")
+				|.delegate)];
+
+		def from_metadata(n):
+			match_kind(n)
+				| [ .kind, .metadata.delegate ];
+
+		def match_delegate(m):
+			select(.delegate|match(m));
+
+		def should(str):
+			if . > 0 then "should_" + str else null end;
+
+		def baking_rights(m):
+			[ .[0][]
+			  |select((.round // .priority) == 0)
+			  |match_delegate(m)
+			] | length | should("bake");
+
+		def endorsing_rights(m):
+			[ .[1]
+			  |(.[0].delegates // .)[]
+			  |match_delegate(m) ]
+			| length | should("endorse");
+
+		| { "baking_rights"    : baking_rights($my_baker)
+		  , "endorsing_rights" : endorsing_rights($my_baker)
+		  , "block"            : (.[2])
+		  }
+		| [ ( .block | .header.level )
+		  , .baking_rights
+		  , .endorsing_rights
+		  , ( .block | ( ( [ "bake", .metadata.baker // "unknown" ]
+		                 , from_balance_updates("evidence$")
+		                 , from_balance_updates("endorsement_with")
+		                 , from_metadata("^endorsement$")
+		                 ) | select(.[1]|match($my_baker))|.[0] ) )
+		  ]
+		|[.[]|select(. != null)]
+	'
+}
+
+usage() {
+
+	1>&2 echo "$@"
+	1>&2 echo "usage: $0 [-f] [-b begin] [-c chain] [-e end] "	\
+		  "[-u URL] baker-address"
+
+	exit 1
+}
+
+CHAIN=main
+BEGIN=2
+END=
+TAILF=
+URL=http://127.0.0.1:8732
+
+while getopts b:c:e:fu: f; do
+	case $f in
+	b)	BEGIN=$OPTARG;;
+	c)	CHAIN=$OPTARG;;
+	e)	END=$OPTARG;;
+	f)	TAILF=1;;
+	u)	URL=$OPTARG;;
+	\?)     usage "Invalid option $f";;
+	esac
+done
+shift $(expr $OPTIND - 1)
+
+if [ $# -lt 1 ]; then
+	usage missing required baker-address
+fi
+
+if [ $# -gt 1 ]; then
+	usage too many arguments
+fi
+
+TOP=$URL/chains/$CHAIN/blocks
+ADDR="$1"
+
+CUR=$BEGIN
+while :; do
+	if ! gen_line $TOP $CUR $ADDR 2>/dev/null; then
+		if [ -n "$TAILF" ]; then
+			sleep 1
+			continue
+		fi
+		exit 1
+	fi
+
+	if [ -n "$END" ] && [ "$END" -le "$CUR" ]; then
+		exit
+	fi
+
+	CUR="$(expr "$CUR" + 1)"
+done
