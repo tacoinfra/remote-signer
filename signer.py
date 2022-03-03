@@ -11,11 +11,7 @@ import logging
 
 def logreq(sigreq, msg):
     if sigreq != None:
-        chainid = sigreq.get_chainid()
-        type = sigreq.get_type()
-        level = sigreq.get_level()
-        round = sigreq.get_round()
-        logging.info(f"Request: {chainid} {type} at {level}/{round}:{msg}")
+        logging.info(f"Request: {sigreq.get_logstr()}:{msg}")
 
 logging.basicConfig(filename='./remote-signer.log',
                     format='%(asctime)s %(threadName)s %(message)s',
