@@ -8,6 +8,7 @@ import logging
 
 from src.sigreq import SignatureReq
 
+baking_req_types = ["Baking", "Endorsement", "Preendorsement" ]
 
 class ValidateSigner:
     def __init__(self, config, ratchet=None, subsigner=None):
@@ -17,6 +18,9 @@ class ValidateSigner:
         self.node_addr = config['node_addr']
 
     def sign(self, handle, sigreq):
+        if sigreq.get_type() not in baking_req_types:
+            raise(Exception("Unsupported signature request tag"))
+
         sig_type = f"{sigreq.get_type()}_{sigreq.get_chainid()}"
         logging.debug(f"About to sign {sigreq.get_payload()} " +
                       f"with key handle {handle}")

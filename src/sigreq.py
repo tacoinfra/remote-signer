@@ -47,7 +47,11 @@ class SignatureReq:
             self.round = get_be_int(data[44:])
 
         else:
-            raise(Exception('Unsupported signature request tag'))
+            self.type = "Unknown operation"
+
+        self.logstr = f"{self.chainid} {self.type}"
+        if self.level != None:
+            self.logstr += f" at {self.level}/{self.round}"
 
     def get_payload(self):
         return self.payload
@@ -63,3 +67,6 @@ class SignatureReq:
 
     def get_round(self):
         return self.round
+
+    def get_logstr(self):
+        return self.logstr
