@@ -56,7 +56,7 @@ gen_line() {
 			  |match_delegate(m) ]
 			| length | should("endorse");
 
-		| { "baking_rights"    : baking_rights($my_baker)
+		  { "baking_rights"    : baking_rights($my_baker)
 		  , "endorsing_rights" : endorsing_rights($my_baker)
 		  , "block"            : (.[2])
 		  }
