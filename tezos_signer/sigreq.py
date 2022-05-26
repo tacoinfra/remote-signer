@@ -6,8 +6,6 @@ from pytezos_core.encoding import base58_encode
 def get_be_int(bytes):
     return struct.unpack('>L', bytes[0:4])[0]
 
-CHAIN_ID = get_be_int(b'\x00\x57\x52\x00')
-
 class SignatureReq:
 
     def __init__(self, hexdata):
