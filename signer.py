@@ -19,21 +19,23 @@ logging.basicConfig(filename='./remote-signer.log',
 
 app = Flask(__name__)
 
-# sample config used for testing
-config = {
-    'hsm_username': 'resigner',
-    'hsm_slot': 1,
-    'hsm_lib': '/opt/cloudhsm/lib/libcloudhsm_pkcs11.so',
-    'node_addr': 'http://node.internal:8732',
-    'keys': {
-        'tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW': {
-            'public_key':
-                'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
-            'private_handle': 7,
-            'public_handle': 9
-        }
-    }
-}
+#
+# The config file (keys.json) has a structure:
+#
+# config = {
+#     'hsm_username': 'resigner',
+#     'hsm_slot': 1,
+#     'hsm_lib': '/opt/cloudhsm/lib/libcloudhsm_pkcs11.so',
+#     'node_addr': 'http://node.internal:8732',
+#     'keys': {
+#         'tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW': {
+#             'public_key':
+#                 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
+#             'private_handle': 7,
+#             'public_handle': 9
+#         }
+#     }
+# }
 
 if path.isfile('keys.json'):
     with open('keys.json', 'r') as myfile:
