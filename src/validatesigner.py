@@ -15,7 +15,6 @@ class ValidateSigner:
         self.keys = config['keys']
         self.ratchet = ratchet
         self.subsigner = subsigner
-        self.node_addr = config['node_addr']
 
     def sign(self, handle, sigreq):
         if sigreq.get_type() not in baking_req_types:
