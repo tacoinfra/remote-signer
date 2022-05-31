@@ -17,6 +17,7 @@ class SignatureReq:
         self.payload = hexdata
         data = bytes.fromhex(hexdata)
 
+        self.level = None
         self.chainid = bitcoin.bin_to_b58check(data[1:5], magicbyte=CHAIN_ID)
 
         if data[0] == 0x01:     # Emmy block
@@ -28,6 +29,25 @@ class SignatureReq:
             self.type  = "Endorsement"
             self.level = get_be_int(data[-4:])
             self.round = 0
+
+        elif data[0] == 0x03:   # Operation, for now, we only do ballots
+            self.chainid = None
+            self.type = "Unknown operation"
+            self.blockhash = data[1:32]         # The block hash
+            if data[33] == 0x06:                # 0x06 is a ballot
+                self.pkh_type = data[34]        # Public Key Hash type
+                self.pkh = data[35:55]          # Public Key Hash
+                self.period = data[55:59]
+                self.proposal = data[59:91]
+                if data[91] == 0x00:
+                    self.type = "Ballot"
+                    self.vote = 'yay'
+                elif data[91] == 0x01:
+                    self.type = "Ballot"
+                    self.vote = 'nay'
+                elif data[91] == 0x02:
+                    self.type = "Ballot"
+                    self.vote = 'pass'
 
         elif data[0] == 0x11:   # Tenderbake block
             self.type  = "Baking"
@@ -47,7 +67,7 @@ class SignatureReq:
             self.round = get_be_int(data[44:])
 
         else:
-            self.type = "Unknown operation"
+            self.type = "Unknown tag"
 
         self.logstr = f"{self.chainid} {self.type}"
         if self.level != None:
@@ -67,6 +87,9 @@ class SignatureReq:
 
     def get_round(self):
         return self.round
+
+    def get_vote(self):
+        return self.vote
 
     def get_logstr(self):
         return self.logstr
