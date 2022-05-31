@@ -86,16 +86,7 @@ class MockHsmSigner:
 
 class TestRemoteSigner(unittest.TestCase):
     TEST_CONFIG = {
-        'hsm_username': 'resigner',
-        'hsm_slot': 1,
-        'hsm_lib': '/opt/cloudhsm/lib/libcloudhsm_pkcs11.so',
-        'keys': {
-            'tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW': {
-                'public_key': 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
-                'private_handle': 7,
-                'public_handle': 9
-            }
-        }
+        'keys': {}
     }
 
     def test_identifies_invalid_block_preamble(self):
