@@ -12,7 +12,6 @@
 #	  "hsm_username": "${HSMUser}",
 #	  "hsm_slot": ${HSMSlot},
 #	  "hsm_lib": "${HSMLibFile}",
-#	  "node_addr": "${NodeAddress}",
 #	  "keys": {
 #	    "${HSMPubKey}": {
 #	      "hash": "${HSMPubKeyHash}",
