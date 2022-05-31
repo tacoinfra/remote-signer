@@ -76,8 +76,27 @@ valid_sig_reqs = [
         137a06a770fa9d62d722a910dc710e32d1e7784bc18ce3ef0e1948806457bb8b1088
         3bc3141500000000000b0000000035dd16cfb423dfe6ba2fc7885270799fb971b3dd
         120437b6b24dbe205456aab0"""))
-]
 
+    , ("Ballot", "yay", eatwhite("""
+        03d144833e2b0d12be5c424ffb5f024a9a18664518b050aa7af13406fb47cd650406
+        008cf825f71b4ca4055bd2c1d4b33df8c114a8b24f00000049d0a3f07b8adfcf61f5
+        ca60f244ca9a876e76cbad9140980f6c88d0bf900ac6d800"""))
+
+    , ("Ballot", "yay", eatwhite("""
+        037215cb9ba7a3ee70fc560254835e25dd36b329f9afb06a9ab36d501d9fc999dc06
+        008cf825f71b4ca4055bd2c1d4b33df8c114a8b24f00000049d0a3f07b8adfcf61f5
+        ca60f244ca9a876e76cbad9140980f6c88d0bf900ac6d800"""))
+
+    , ("Ballot", "nay", eatwhite("""
+        0380bd2d969075e0cfed0c8ee0fd937dc507008cec89f498e23dc8bce8ab59765406
+        008cf825f71b4ca4055bd2c1d4b33df8c114a8b24f00000049d0a3f07b8adfcf61f5
+        ca60f244ca9a876e76cbad9140980f6c88d0bf900ac6d801"""))
+
+    , ("Ballot", "pass", eatwhite("""
+        03f33bb07f5702ef66b51380d580fa5a22e235bbb4497fe8e25ebab6bf26e19bc706
+        008cf825f71b4ca4055bd2c1d4b33df8c114a8b24f00000049d0a3f07b8adfcf61f5
+        ca60f244ca9a876e76cbad9140980f6c88d0bf900ac6d802"""))
+]
 
 class MockHsmSigner:
     def sign(self, handle=None, data=None, mechanism=None):
@@ -86,8 +105,29 @@ class MockHsmSigner:
 
 class TestRemoteSigner(unittest.TestCase):
     TEST_CONFIG = {
-        'keys': {}
+        'keys': {},
+        'policy': {
+            'baking': 1,
+            'voting': ['yay', 'nay', 'pass'],
+        }
     }
+
+    def vote_test(self, req, got):
+        self.assertEqual(req[1], got.vote)
+
+        rs = ValidateSigner(self.TEST_CONFIG,
+                            ratchet=MockChainRatchet(),
+                            subsigner=MockHsmSigner())
+        self.assertEqual(rs.sign(7, SignatureReq(req[-1])), SIGNED_BLOCK)
+
+        #
+        # Now we create a config with a policy that disallows voting:
+
+        with self.assertRaises(Exception):
+            rs = ValidateSigner({ 'keys': {}, 'policy': { 'voting': [] } },
+                                ratchet=MockChainRatchet(),
+                                subsigner=MockHsmSigner())
+            rs.sign(7, SignatureReq(req[-1]))
 
     def test_identifies_invalid_block_preamble(self):
         with self.assertRaises(Exception):
@@ -98,10 +138,15 @@ class TestRemoteSigner(unittest.TestCase):
 
     def test_list_sigreqs(self):
         for req in valid_sig_reqs:
-            #
-            # First we test if we are successfully parsing the blocks:
-            got = SignatureReq(req[4])
+            got = SignatureReq(req[-1])
             self.assertEqual(req[0], got.type)
+
+            if got.type == 'Ballot':
+                return self.vote_test(req, got)
+
+            #
+            # For now, if we aren't a 'Ballot' then we are baking:
+
             self.assertEqual(req[1], got.chainid)
             self.assertEqual(req[2], got.level)
             self.assertEqual(req[3], got.round)

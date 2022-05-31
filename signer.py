@@ -33,6 +33,10 @@ app = Flask(__name__)
 #             'private_handle': 7,
 #             'public_handle': 9
 #         }
+#     },
+#     'policy': {
+#         'baking': 1,		# just a boolean
+#         'voting': ['pass'],	# a list of permitted votes
 #     }
 # }
 
