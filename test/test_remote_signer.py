@@ -130,7 +130,7 @@ class TestRemoteSigner(unittest.TestCase):
     def test_identifies_invalid_block_preamble(self):
         with self.assertRaises(Exception):
             rs = ValidateSigner(self.TEST_CONFIG,
-                                ratchet=MockChainRatchet(0, 0),
+                                ratchet=MockChainRatchet({}, 0, 0),
                                 hsm=MockSigner(RAW_SIGNED_BLOCK))
             rs.sign(SignatureReq(INVALID_PREAMBLE))
 
@@ -155,14 +155,15 @@ class TestRemoteSigner(unittest.TestCase):
             # testing to ensure that we are denied when we double bake:
 
             rs = ValidateSigner(self.TEST_CONFIG,
-                                ratchet=MockChainRatchet(level=got.level-1,
+                                ratchet=MockChainRatchet({}, level=got.level-1,
                                                          round=0),
                                 subsigner=MockSigner(RAW_SIGNED_BLOCK))
             self.assertEqual(rs.sign(SignatureReq(req[4])), SIGNED_BLOCK)
 
             if got.round > 0:
                 rs = ValidateSigner(self.TEST_CONFIG,
-                                    ratchet=MockChainRatchet(level=got.level,
+                                    ratchet=MockChainRatchet({},
+                                                             level=got.level,
                                                              round=got.round-1),
                                     subsigner=MockSigner(RAW_SIGNED_BLOCK))
                 self.assertEqual(rs.sign(SignatureReq(req[4])), SIGNED_BLOCK)
@@ -172,7 +173,7 @@ class TestRemoteSigner(unittest.TestCase):
 
             with self.assertRaises(Exception):
                     rs = ValidateSigner(self.TEST_CONFIG,
-                                        ratchet=MockChainRatchet(got.level,
+                                        ratchet=MockChainRatchet({}, got.level,
                                                                  got.round),
                                         subsigner=MockSigner(RAW_SIGNED_BLOCK))
                     rs.sign(SignatureReq(req[4]))
