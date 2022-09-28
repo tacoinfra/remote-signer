@@ -48,7 +48,7 @@ if path.isfile('keys.json'):
 # We keep the ChainRatchet, HSM, and ValidateSigner outside sign()
 # so that they persist.
 
-cr  = DDBChainRatchet(config['aws_region'], config['ddb_table'])
+cr  = DDBChainRatchet(config)
 hsm = HsmSigner(config)
 rs  = ValidateSigner(config, ratchet=cr, subsigner=hsm)
 
