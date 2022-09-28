@@ -30,7 +30,7 @@ class ChainRatchet:
 
 class MockChainRatchet(ChainRatchet):
 
-    def __init__(self, level=0, round=0):
+    def __init__(self, config, level=0, round=0):
         self.lastlevel = level
         self.lastround = round
 
