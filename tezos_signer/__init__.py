@@ -1,6 +1,6 @@
 from .sigreq import SignatureReq
 
-from .signer import Signer
+from .signer import Signer, MockSigner
 from .hsmsigner import HsmSigner
 from .validatesigner import ValidateSigner
 
