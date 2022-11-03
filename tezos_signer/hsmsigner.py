@@ -8,8 +8,6 @@ import threading
 from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmMech
 
-from pyblake2 import blake2b
-
 from tezos_signer import Signer
 
 
@@ -31,8 +29,7 @@ class HsmSigner(Signer):
         with self.lock:
             with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin,
                            pkcs11_lib=self.hsm_libfile) as c:
-                hashed_data = blake2b(hex_to_bytes(sigreq.get_payload()),
-                                      digest_size=32).digest()
+                hashed_data = sigreq.get_hashed_payload()
                 logging.debug(f'Hashed data to sign: {hashed_data}')
                 sig = c.sign(handle=handle, data=hashed_data,
                              mechanism=HsmMech.ECDSA)
