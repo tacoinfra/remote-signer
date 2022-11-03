@@ -2,6 +2,7 @@ import struct
 import string
 
 from pytezos_core.encoding import base58_encode
+from pytezos_core.key import blake2b
 
 def get_be_int(bytes):
     return struct.unpack('>L', bytes[0:4])[0]
@@ -12,10 +13,11 @@ class SignatureReq:
         if not all(c in string.hexdigits for c in hexdata):
             raise('Invalid signature request: not all hex digits')
 
-        self.payload = hexdata
+        self.hex_payload = hexdata
         data = bytes.fromhex(hexdata)
 
-        self.level = None
+        self.payload = data
+        self.level   = None
         self.chainid = base58_encode(data[1:5], prefix=b'Net').decode()
 
         if data[0] == 0x01:     # Emmy block
@@ -71,8 +73,14 @@ class SignatureReq:
         if self.level != None:
             self.logstr += f" at {self.level}/{self.round}"
 
+    def get_hex_payload(self):
+        return self.hex_payload
+
     def get_payload(self):
         return self.payload
+
+    def get_hashed_payload(self):
+        return blake2b(self.payload, digest_size=32).digest()
 
     def get_type(self):
         return self.type
