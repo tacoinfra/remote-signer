@@ -35,7 +35,7 @@ class ValidateSigner:
             allowed = True
         # allow transfer
         if sigreq.get_type() in [ "Unknown operation" ]:
-            allod = True
+            allowed = True
 
         if not allowed:
             raise(Exception('Request is against policy'))
@@ -50,6 +50,11 @@ class ValidateSigner:
             sig_type = f"{sigreq.get_type()}_{sigreq.get_chainid()}"
             level = sigreq.get_level()
             round = sigreq.get_round()
+            logging.info("****")
+            logging.info(sig_type)
+            logging.info(level)
+            logging.info(round)
+            logging.info("****")
 
             self.ratchet.check(sig_type, level, round)
 
