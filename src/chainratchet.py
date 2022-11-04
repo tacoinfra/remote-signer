@@ -17,8 +17,6 @@ from werkzeug.exceptions import abort
 
 class ChainRatchet:
     def check(self, sig_type, level=0, round=0):
-        if sig_type != self.sig_type:
-            return True
         if self.lastlevel < level:
             return True
         if self.lastlevel == level and self.lastround < round:
@@ -35,11 +33,9 @@ class MockChainRatchet(ChainRatchet):
     def __init__(self, config,level=0, round=0):
         self.lastlevel = level
         self.lastround = round
-        self.sig_type = "start"
 
     def check(self, sig_type, level=0, round=0):
         super().check(sig_type, level, round)
         self.lastlevel = level
         self.lastround = round
-        self.sig_type = sig_type
         return True

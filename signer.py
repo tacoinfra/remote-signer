@@ -7,6 +7,7 @@ from src.sigreq import SignatureReq
 
 from src.chainratchet import MockChainRatchet
 from src.ddbchainratchet import DDBChainRatchet
+from src.sqlitechainratchet import SQLiteChainRatchet
 
 from src.signer import MockSigner
 from src.localsigner import LocalSigner
@@ -74,6 +75,7 @@ ss = signers[config["signer"]](config)
 ratchets = {
     'mockery'    : MockChainRatchet,
     'dynamodb'   : DDBChainRatchet,
+    'sqlitedb'   : SQLiteChainRatchet,
 }
 
 if "chain_ratchet" not in config:

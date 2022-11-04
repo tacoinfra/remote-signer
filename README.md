@@ -235,6 +235,29 @@ variables: `REGION` and `DDB_TABLE`.  `REGION` is your AWS region and
 `DDB_TABLE` is name of the table within DynamoDB that your ratchet
 is stored.
 
+### SQLiteChainRatchet
+
+This ChainRatchet uses a local sqlite database as a backend to store the current level and round.
+To create the DB:
+
+$ cat <<EOF > s.sql
+CREATE TABLE  signature(sigtype TEXT PRIMARY KEY,
+lastblock NUMERIC,
+lastround NUMERIC
+);
+EOF
+
+$ sqlite3 test.db < s.sql
+
+Specify the pathname of your database in the db attibute of the keys.json file:
+{
+        "signer": "grep11",
+        "db": "/data/tezos/remote-signer/sig.db",
+...
+
+A
+
+
 ### MockChainRatchet
 
 This ChainRatchet stores the current level and round in memory and is
