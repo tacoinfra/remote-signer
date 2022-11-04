@@ -33,6 +33,9 @@ class ValidateSigner:
                 raise(Exception(f'Voting "{self.get_vote()}" ' +
                                  'is against policy'))
             allowed = True
+        # allow transfer
+        if sigreq.get_type() in [ "Unknown operation" ]:
+            allod = True
 
         if not allowed:
             raise(Exception('Request is against policy'))
