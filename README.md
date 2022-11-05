@@ -97,9 +97,12 @@ https://www.ibm.com/docs/en/hpvs/2.1.x?topic=crypto-express-network-api-secure-e
 
 The file keys.json.hpcsgrep11.sample provides a configuration sample
 
-The public key, public key hash and secret blob can be create using the createtezos tools available at https://github.com/jyg007/hpcstezos
+The public key, public key hash and secret blob can be created using the createtezos tools available at https://github.com/jyg007/hpcstezos
+This program however requires you deploy a grep11 service with IBM Hyper Protect Virtual Server 1.* or 2.1.
+To connect this grep11 server, you will use some TLS certificates that you can reuse for the remote-signer program.
 
-$ ./createtezos 
+Create your keys the following ways:
+$ ./createtezoskey
 p2pk66EnR4uFKpTmZj9z5Fg9J2J8KmLb7LCwZe5QPySs8JurcTP1PXM
 tz3gvQDEZfYakYEcqaL3ESQGbbNhwVHXAQmd
 
