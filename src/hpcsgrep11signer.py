@@ -10,6 +10,7 @@ import src.server_pb2 as g11
 from pyblake2 import blake2b
 
 from src.signer import Signer
+import sys
 
 class HPCSGrep11Signer(Signer):
     def __init__(self, config):
@@ -30,9 +31,13 @@ class HPCSGrep11Signer(Signer):
         hashed_data = blake2b(bytes.fromhex(sigreq.get_payload()), digest_size=32).digest()
         logging.debug(f'Hashed data to sign: {hashed_data}')
 
-        CKM_ECDSA                          = 0x00001041
-        mech=g11.Mechanism(Mechanism=CKM_ECDSA)
-
+        if phk[2] == "3":
+            CKM_ECDSA = 0x00001041
+            mech=g11.Mechanism(Mechanism=CKM_ECDSA)
+        elif phk[2] == 1:
+            CKM_IBM_ED25519_SHA512 = 0x8001001c
+            mech=g11.Mechanism(Mechanism=CKM_IBM_ED25519_SHA512)
+        
         request = g11.SignSingleRequest(Mech=mech, PrivKey=sk, Data=hashed_data)
 
         response = self.stub.SignSingle(request)
