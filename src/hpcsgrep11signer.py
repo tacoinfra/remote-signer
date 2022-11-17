@@ -15,7 +15,7 @@ import sys
 from pytezos_core.encoding import base58_encode
 
 CKM={"3":0x00001041 ,"2":0x00001041, "1":0x8001001c}  # CKM_ECDSA for tz2 and tz3 et CKM_IBM_ED25519_SHA512 for tz1
-PREFIX={"3": b'p2sig', "2": b'spsig1' , "1": b'edsig' } 
+PREFIX={"3": b'p2sig', "2": b'spsig' , "1": b'edsig' } 
 
 class HPCSGrep11Signer(Signer):
     def __init__(self, config):
