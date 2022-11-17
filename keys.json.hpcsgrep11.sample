@@ -1,20 +1,30 @@
 {
-	"signer": "grep11",
-	"ratchet": "mockery",
+        "signer": "grep11",
         "url": "grep11.metaco.com:9876",
         "cert_path": "/data/tezos/remote-signer/grep11client.pem",
         "key_path": "/data/tezos/remote-signer/grep11client-key.pem",
         "cacert_path": "/data/tezos/remote-signer/grep11ca.pem" ,
 
-	"keys": {
-		"tz3gvQDEZfYakYEcqaL3ESQGbbNhwVHXAQmd": {
-			"public_key": "p2pk66EnR4uFKpTmZj9z5Fg9J2J8KmLb7LCwZe5QPySs8JurcTP1PXM",
-                        "secret_key": "000000000000000000000000000000000000000000000000000000000000000058b25ed705767b2729e96514ee97a6b3000000000040012600000000000000011234fe9bd078342ef1f116ca2e86b7debc752ef181125d0cf3c803ac029e218fd2106be2882eccbc6b657b505d1d0c625c054da40399a35df06e190a511d2e0fd2a67d3411c6f0633cc75003e768e4125fae879c70ec436aa517c36e949b6d64930801c5310557edcb182c8ba1fd0a470fbf13b399b1322ab73565368501a2067e8a5d5c1be40caaa267c6271caee1cd76a1c14a3aa292f8670dc2413d8a90d2ecfdb4c20af8d0c518ca4b28ef4d4750fdcf1e99781de36432c14472fa9ed06bb06465438dfa3796a51048973294eef4bdb1bcacdc898a9708448f85d1626bb28d6177abe07030ad7a09d1438440fec5d62f7871f74a126eebd71b69a6d7b7caa1489c5fd945859b2d72a690eb67f66d39d75f3aafecaef1c25b9fb6503d66d74a302dcf6d6d8613a59ef89d2ba1c9e7b2a4bd441813361844622f0a23780d362d02a348c1517f79215d84152b8c80e3ebd6c1e4b1181e704e16d1e152eb5cdbb79385f9e3c9db4ca94dcb2a93beb627ac118674c3e4d2e5b880401ca1905c538840be3ba2e9755273d35075434ba8ecd9636707481786458928cdd4bd96758a9fb4e06fd0392d9e30a564b664dc650d55b4fd3e22d65d6a3a5e936b8115360c4c100c231ffcb5d541caa22eae0ffb3114431c13240bb71b58ad9100f0501930067d34728c3f8bb6ca655a1cb042082d4a825b0727444fc1a126e0c388e74c50"
-		}
-	},
-	"policy": {
-		"baking": 1,
-		"voting": ["aye", "pass"]
-	},
-        "chain_ratchet" : "mockery"
+        "keys": {
+                "tz3gvQDEZfYakYEcqaL3ESQGbbNhwVHXAQmd": {
+                        "public_key": "p2pk66EnR4uFKpTmZj9z5Fg9J2J8KmLb7LCwZe5QPySs8JurcTP1PXM",
+                        "secret_key": "000XXXXXXXXXXXXXXXXxx",
+                         "db": "/remote-signer/DB1.db"
+                },
+                "tz2Bjvy8z8ackCt2mQns2LrZ6Yc5BKe4dCpk": {
+                        "public_key": "sppk7bGD91TUq16Fee3Qic3VBZbzQ5hMhqDery4ghd1Gww2aT2cLcYJ",
+                        "secret_key": "0000000000000000000000000XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                        "db": "/remote-signer/DB2.db"
+                },
+                "tz1hjmoX6vQhfboTyTRSaqep4yeGbsb3LN7z": {
+                       "public_key": "edpkvWoG8zRAgfPpQtWhf6VEMifvBsmGriKKRXfmHJv1kBWT6oucKn",
+                       "secret_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                       "db": "/remote-signer/DB3.db"
+                }
+        },
+        "policy": {
+                "baking": 1,
+                "voting": ["aye", "pass"]
+        },
+        "chain_ratchet" : "sqlitedb"
 }
