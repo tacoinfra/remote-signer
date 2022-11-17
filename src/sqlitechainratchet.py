@@ -9,10 +9,10 @@ from src.chainratchet import ChainRatchet
 class SQLiteChainRatchet(ChainRatchet):
 
     def __init__(self,config ):
-        self.db=config["db"]
+        self.db=config["keys"]
 
-    def check(self, sig_type, level=0, round=0):
-        connection = sqlite3.connect(self.db)
+    def check(self, pkh, sig_type, level=0, round=0):
+        connection = sqlite3.connect(self.db[pkh]["db"])
         cursor = connection.cursor()
         try:
           item=cursor.execute("SELECT * FROM signature WHERE sigtype = ?",(sig_type,)).fetchone()
