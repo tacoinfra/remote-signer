@@ -40,7 +40,18 @@ class HPCSGrep11Signer(Signer):
 
         response = self.stub.SignSingle(request)
         logging.debug(f'Raw signature: {response.Signature}')
+        if pkh[2]=="2":
+          n=0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+          sig_s=int.from_bytes(response.Signature[32:64],"big")
+          if (sig_s > (n >> 1) ):
+            norm_s=(n-sig_s).to_bytes(32,'big')
+            sig=response.Signature[0:32]+norm_s
+            logging.debug(f'Normalized secp256k1 sig: {response.Signature}')
+          else:
+            sig=response.Signature
+        else:
+          sig=response.Signature
 #       encoded_sig = Signer.b58encode_signature(response.Signature)
-        encoded_sig = base58_encode(response.Signature, prefix=PREFIX[pkh[2]])
+        encoded_sig = base58_encode(sig, prefix=PREFIX[pkh[2]])
         logging.debug(f'Base58-encoded signature: {encoded_sig}')
         return encoded_sig
