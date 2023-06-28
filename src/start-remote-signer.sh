@@ -27,7 +27,7 @@ export LANG=en_US.UTF-8
 
 start_hsm_client() {
 	# This client must be started in order for the PKCS#11 library to communicate with the CloudHSM
-	sudo start cloudhsm-client
+	sudo systemctl start cloudhsm-client
 }
 
 load_password() {
