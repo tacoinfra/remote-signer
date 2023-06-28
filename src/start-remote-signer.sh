@@ -53,6 +53,9 @@ start_remote_signer() {
 
 # main
 
+[ -z "${REGION}" ] && echo "REGION must be set" >&2 && exit 1
+[ -z "${HSMID}" ] && echo "HSMID must be set" >&2 && exit 1
+
 start_hsm_client
 load_password
 start_remote_signer
