@@ -1,5 +1,6 @@
 #!/bin/sh
-# Starts the Remote Signer
+# Starts the Remote Signer on an EC2 instance
+# Must run under a user with sudo access
 # -----------------------------------------------------------------------
 # Requires the following environment variables to be set
 # $REGION = the AWS region where the remote signer is deployed
