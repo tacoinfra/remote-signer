@@ -2,9 +2,17 @@ all: check zipfile
 
 DC=docker-compose
 
+.PHONY: test
+
+test:
+	${DC} up -d
+	${DC} exec signer bash -c ' \
+	python3 -m unittest test/test_remote_signer.py \
+	'
+
 # see pyproject.toml for which
 # files are actually checked:
-# pip install mypy django-stubs; \
+# eg: pip install mypy django-stubs
 
 mypy:
 	${DC} up -d
