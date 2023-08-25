@@ -1,6 +1,9 @@
+all: check zipfile
 
 #
 #
+
+DC=docker compose
 
 SRCS=	setup.py			\
 	scripts/signer			\
@@ -20,7 +23,16 @@ ARCHFILES= $(SRCS) requirements.txt binaries/compat-openssl10.tar.xz
 
 .PHONY: all check docker tarball zipfile
 
-all: check zipfile
+down:
+	${DC} stop
+
+up:
+	${DC} up -d
+
+rebuild:
+	${DC} stop
+	docker build -t remote-signer:latest .
+	${DC} up --build --force-recreate --no-deps -d
 
 docker: tarball
 	docker build -t remote-signer .
