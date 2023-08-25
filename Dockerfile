@@ -1,8 +1,7 @@
-FROM amazonlinux:1
+FROM amazonlinux:2
 
 RUN \
-	yum install -y wget aws-cli python36 python36-devel git gcc &&	\
-	easy_install-3.6 pip
+	yum install -y wget aws-cli python3 python3-devel git gcc
 
 RUN	TOP=https://s3.amazonaws.com/cloudhsmv2-software/CloudHsmClient	\
 	VER=EL6								\
@@ -16,7 +15,7 @@ RUN	TOP=https://s3.amazonaws.com/cloudhsmv2-software/CloudHsmClient	\
 	done
 
 COPY requirements.txt /
-RUN pip3 install -r /requirements.txt && \
+RUN python3 -m pip install -r /requirements.txt && \
   /opt/cloudhsm/bin/configure -a hsm.internal && \
   yum clean all
 

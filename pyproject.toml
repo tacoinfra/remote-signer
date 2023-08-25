@@ -1,0 +1,39 @@
+[tool.vulture]
+min_confidence = 80
+paths = ["src"]
+sort_by_size = true
+ignore_names = ["schema_editor", "model_admin"]
+
+[tool.ruff]
+line-length = 88
+ignore = ["E501", "F405", "F403", "E722"]
+
+# E501 line too long 
+# F405 star imports
+# F403 from module import *’ used; unable to detect undefined names
+# E722 do not use bare 'except'
+
+[tool.bandit]
+exclude_dirs = [
+    # "test", 
+]
+skips = ["B101"]
+# tests = ["B201", "B301"]
+
+[tool.mypy]
+python_version = "3.11"
+follow_imports = "silent"
+# files = [
+#     # "kleanse/management/commands/kleanse.py",
+# ]
+
+# https://mypy.readthedocs.io/en/stable/config_file.html
+exclude = [
+    # "main/tests/test.py",
+]
+
+ignore_missing_imports = true
+disable_error_code = "misc"
+
+# [tool.django-stubs]
+# django_settings_module = "docker.conf.settings"

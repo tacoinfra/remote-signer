@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  signer:
+    image: remote-signer-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: signer
+    entrypoint: sleep infinity
+    volumes:
+      - .:/code

@@ -44,3 +44,11 @@ FLASK_APP=signer flask run
 ```
 make check
 ```
+
+## Linting and Code Analysis
+
+```sh
+make rebuild
+make lint
+make mypy
+```
