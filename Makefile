@@ -27,12 +27,15 @@ down:
 	${DC} stop
 
 up:
-	${DC} up -d
+	@${DC} up -d
 
 rebuild:
 	${DC} stop
 	docker build -t remote-signer:latest .
 	${DC} up --build --force-recreate --no-deps -d
+
+int integration:
+	${DC} exec signer sh -c "pytest --cov=tezos_signer"
 
 docker: tarball
 	docker build -t remote-signer .

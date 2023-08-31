@@ -1,11 +1,36 @@
 version: '3.8'
 services:
+  dynamodb-local:
+    # command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    user: root
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
   signer:
-    image: remote-signer-dev
     build:
       context: .
       dockerfile: Dockerfile.dev
     container_name: signer
     entrypoint: sleep infinity
+    ports:
+      - "5000:5000"
+    depends_on:
+      - "dynamodb-local"
+    links:
+      - "dynamodb-local"
+    environment:
+      AWS_ACCESS_KEY_ID: 'DUMMYIDEXAMPLE'
+      AWS_SECRET_ACCESS_KEY: 'DUMMYEXAMPLEKEY'
+      BOTO3_ENDPOINT: 'http://dynamodb-local:8000'
+      DYNAMO_DB_URL: 'http://dynamodb-local:8000'
+      REGION: 'eu-west-1'
+      DDB_TABLE: 'test_table'
+      HSM_PASSWORD: '1234' # strong :)
+      DEBUG: '1'
     volumes:
       - .:/code

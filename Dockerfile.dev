@@ -1,3 +1,28 @@
-FROM remote-signer
-RUN pip3 install pre-commit ipython pudb rich-cli black==22.3.0 ruff isort flake8 mypy
+FROM remote-signer:latest
+
+USER root
+RUN	set -e;							\
+	yum -y install	gcc-c++ make automake autoconf libtool	\
+			pkg-config openssl-devel gnutls-utils	\
+			git-core python3-pip python3-devel;	\
+								\
+	pip3 install	pytest-cov;				\
+								\
+	: We install dyndb-mutex from source as 0.4.0;		\
+	: does not support endpoint_url;			\
+								\
+	URL=git+https://github.com;				\
+	URL="${URL}/chiradeep/dyndb-mutex";			\
+	URL="${URL}@a39d06f06b5602d6fea98eea39247f337526c25c";	\
+	URL="${URL}#egg=dyndbmutex";				\
+								\
+	pip3 install -e $URL;					\
+								\
+	git clone https://github.com/opendnssec/SoftHSMv2;	\
+	cd SoftHSMv2;						\
+	sh autogen.sh;						\
+	./configure;						\
+	make all install;
+USER ec2-user
+
 WORKDIR /code
