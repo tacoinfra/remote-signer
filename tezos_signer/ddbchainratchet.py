@@ -27,7 +27,11 @@ class DDBChainRatchet(ChainRatchet):
 
     def __init__(self, config):
         self.REGION = config.get_aws_region()
-        self.dynamodb = boto3.resource('dynamodb', region_name=self.REGION)
+        kwargs = {"region_name":self.REGION}
+        url = config.get_boto3_endpoint()
+        if url is not None:
+            kwargs.update({"endpoint_url": url})
+        self.dynamodb = boto3.resource('dynamodb', **kwargs)
         self.table = self.dynamodb.Table(config.get_ddb_table())
 
     def CreateItem(self, keyname, key, level, round):

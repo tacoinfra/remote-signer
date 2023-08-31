@@ -58,6 +58,7 @@ class TacoinfraConfig:
         self.aws_region = conf.get("aws_region")
         self.bind_addr = conf.get("bind_addr", "127.0.0.1")
         self.bind_port = conf.get("bind_port", "5000")
+        self.boto3_endpoint = conf.get("boto3_endpoint")
         self.ddb_table = conf.get("ddb_table")
         self.hsm_username = conf.get("hsm_username")
         self.hsm_slot = int(conf.get("hsm_slot", "0"))
@@ -108,6 +109,9 @@ class TacoinfraConfig:
 
     def get_aws_region(self):
         return self.aws_region
+
+    def get_boto3_endpoint(self):
+        return self.boto3_endpoint
 
     def get_ddb_table(self):
         return self.ddb_table

@@ -136,7 +136,8 @@ class TestRemoteSigner(unittest.TestCase):
             self.assertEqual(req[0], got.type)
 
             if got.type == 'Ballot':
-                return self.vote_test(req, got)
+                self.vote_test(req, got)
+                continue
 
             #
             # For now, if we aren't a 'Ballot' then we are baking:
