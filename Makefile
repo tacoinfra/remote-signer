@@ -2,45 +2,66 @@ all: check zipfile
 
 DC=docker-compose
 
-.PHONY: test
+rebuild:
+	${DC} stop
+	docker build -t remote-signer:latest .
+	${DC} up --build --force-recreate --no-deps -d
 
-test:
-	${DC} up -d
+.PHONY: test
+test: up
 	${DC} exec signer bash -c ' \
 	python3 -m unittest test/test_remote_signer.py \
+	'
+
+lint: up
+	${DC} exec signer bash -c ' \
+	git config --global --add safe.directory "$${PWD}"; \
+	pre-commit run --all-files \
 	'
 
 # see pyproject.toml for which
 # files are actually checked:
 # eg: pip install mypy django-stubs
-
-mypy:
-	${DC} up -d
+mypy: up
 	${DC} exec signer bash -c ' \
 	mypy --check-untyped-defs src \
 	'
 
-lint:
+coverage: up
 	${DC} exec signer bash -c ' \
-	git config --global --add safe.directory "$${PWD}"; \
-	pre-commit run --all-files \
+	pip3 install pytest-cov; \
+	pytest --cov=src . \
 	'
-bash:
-	${DC} exec signer bash
 
 down:
 	${DC} stop
 
-up:
-	${DC} up -d
+up: 
+	@${DC} up -d
 
 ps:
 	${DC} ps
 
-rebuild:
-	${DC} stop
-	docker build -t remote-signer:latest .
-	${DC} up --build --force-recreate --no-deps -d
+bash: up
+	${DC} exec signer bash
+
+config: up
+	${DC} exec signer bash -c ' \
+	cp /keys.json /code/keys.json \
+	'
+
+int integration: config
+	${DC} exec signer bash -c ' \
+	python3 -m unittest test/integration.py \
+	'
+
+run: config
+	@${DC} exec signer bash -c ' \
+	echo ♉ dyanamo db: $$DYNAMO_DB_URL; \
+	FLASK_APP="signer" /usr/local/bin/flask  run --reload --host=0.0.0.0 \
+	'
+
+# GE: older targets for reference
 
 docker:
 	docker build -t remote-signer .

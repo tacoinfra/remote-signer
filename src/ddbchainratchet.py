@@ -25,10 +25,13 @@ class DecimalEncoder(json.JSONEncoder):
 
 class DDBChainRatchet(ChainRatchet):
 
-    def __init__(self, ddb_region, ddb_table):
+    def __init__(self, ddb_region, ddb_table, endpoint_url):
         self.REGION = ddb_region
         self.DDB_TABLE = ddb_table
-        self.dynamodb = boto3.resource('dynamodb', region_name=self.REGION)
+        kwargs = {"region_name":self.REGION}
+        if endpoint_url is not None:
+            kwargs.update({"endpoint_url": endpoint_url})
+        self.dynamodb = boto3.resource('dynamodb', **kwargs)
         self.table = self.dynamodb.Table(self.DDB_TABLE)
 
     def CreateItem(self, keyname, key, level, round):

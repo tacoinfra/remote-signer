@@ -39,16 +39,32 @@ export HSM_PASSWORD=blah
 FLASK_APP=signer flask run
 ```
 
-## Running the tests
-
-```
-make check
-```
-
-## Linting and Code Analysis
-
+## Running locally in docker against softhsm2
 ```sh
+
+# build the docker containers and bring them up
 make rebuild
+
+# run the unit tests
+make test
+
+# show unit test coverage
+make coverage
+
+# run a few integration tests with the flask test client
+make int
+
+# lint
 make lint
+
+# static code analysis
 make mypy
+
+# open a shell in the signer container
+make bash
+
+# run the signer app in docker and make a signing request
+make run
+pip install httpie
+http POST http://0.0.0.0:5000/keys/tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW <<<'"117a06a7700000000c0272b9c070cec8364f71d3361b0196ff250451241dc70933fefbda3b4c0eff329700000000619d27ce0401589994c43f991baf797f80702ba7f11075ea11eaed813c3b2eaf769b42ca30000000210000000102000000040000000c0000000000000004ffffffff0000000400000000c146ae2d2ada6afc75c4e2d84d994366d0944f1d5448f8ce5c99365ab8f7aa05532d7119ff62aeeea609473addaafc033aa264c5cf6ab8af70e1154ed44cb3d800000000ef9ad9f900000000ff408781a014bbc88d879ae2847cb65e31318c61aab34cd000ae27a9103a718b5b00"'
 ```

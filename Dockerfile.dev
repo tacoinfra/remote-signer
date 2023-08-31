@@ -1,3 +1,27 @@
 FROM remote-signer
+
+# extra build dependencies
+RUN yum -y install gcc-c++ make automake autoconf libtool pkg-config openssl-devel gnutls-utils
+
+# extra python dependencies
 RUN pip3 install pre-commit ipython pudb rich-cli black==22.3.0 ruff isort flake8 mypy
+# install dyndb-mutex from source as 0.4.0 doesn't support endpoint_url
+RUN pip3 install -e git+https://github.com/chiradeep/dyndb-mutex@a39d06f06b5602d6fea98eea39247f337526c25c#egg=dyndbmutex
+
+WORKDIR /
+
+# libhsm
+# https://github.com/bentonstark/libhsm
+RUN git clone https://github.com/bentonstark/libhsm.git
+RUN (cd ./libhsm/build; ./build_libhsm; cp libhsm.so /usr/lib64/libhsm.so)
+
+# SoftHSMv2
+# https://github.com/opendnssec/SoftHSMv2
+RUN git clone https://github.com/opendnssec/SoftHSMv2
+RUN (cd SoftHSMv2; sh autogen.sh; ./configure; make; make install)
+
+# set up token and create /keys.json
+COPY scripts/create_keys_dot_json.sh /
+RUN /create_keys_dot_json.sh
+
 WORKDIR /code
