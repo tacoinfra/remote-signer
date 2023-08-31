@@ -9,3 +9,6 @@
 src/bitcoin
 keys.json
 remote-signer.log
+.coverage
+docker/
+src/dyndbmutex/

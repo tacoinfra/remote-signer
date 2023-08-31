@@ -6,12 +6,22 @@ from os import environ
 import threading
 
 from pyhsm.hsmclient import HsmClient
-from pyhsm.hsmenums import HsmMech
+from pyhsm.hsmenums import HsmMech, HsmAttribute
 from pyhsm.convert import hex_to_bytes
 
 from pyblake2 import blake2b
 
 from src.signer import Signer
+
+def discover_handles(c):
+    h1, h2 = c.find_objects()
+    if int.from_bytes(
+        c.get_attribute_value(h1, attribute_type=HsmAttribute.PRIVATE),
+        byteorder="little",
+    ):
+        return h1, h2
+    else:
+        return h2, h1
 
 
 class HsmSigner(Signer):
@@ -34,6 +44,14 @@ class HsmSigner(Signer):
                 hashed_data = blake2b(hex_to_bytes(sigreq.get_payload()),
                                       digest_size=32).digest()
                 logging.debug(f'Hashed data to sign: {hashed_data}')
+                if environ.get('DEBUG', None):
+                    """
+                    with softhsm, pkcs11 returns different handles
+                    in each session so we have to interrogate the API
+                    every time:
+                    """
+                    private_handle, _public_handle = discover_handles(c)
+                    handle = private_handle
                 sig = c.sign(handle=handle, data=hashed_data,
                              mechanism=HsmMech.ECDSA)
 

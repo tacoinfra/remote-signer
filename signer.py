@@ -9,13 +9,26 @@ from src.hsmsigner import HsmSigner
 from os import path, environ
 import logging
 
+DEBUG = environ.get('DEBUG', None)
+
 def logreq(sigreq, msg):
     if sigreq != None:
         logging.info(f"Request: {sigreq.get_logstr()}:{msg}")
 
-logging.basicConfig(filename='./remote-signer.log',
-                    format='%(asctime)s %(threadName)s %(message)s',
-                    level=logging.INFO)
+FORMAT = "%(asctime)s %(threadName)s %(message)s"
+
+if DEBUG:
+    from rich.logging import RichHandler
+    logging.basicConfig(
+        level="NOTSET",
+        format=FORMAT,
+        datefmt="[%X]",
+        handlers=[RichHandler(show_path=False, level=logging.INFO)],
+    )
+else:
+    logging.basicConfig(filename='./remote-signer.log',
+                        format=FORMAT,
+                        level=logging.INFO)
 
 app = Flask(__name__)
 
@@ -50,7 +63,7 @@ if path.isfile('keys.json'):
 # We keep the ChainRatchet, HSM, and ValidateSigner outside sign()
 # so that they persist.
 
-cr  = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'])
+cr  = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'], environ.get('BOTO3_ENDPOINT') if DEBUG else None)
 hsm = HsmSigner(config)
 rs  = ValidateSigner(config, ratchet=cr, subsigner=hsm)
 
