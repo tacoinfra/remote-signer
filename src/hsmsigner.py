@@ -1,12 +1,11 @@
 import logging
-from os import environ
 import threading
-
-from pyhsm.hsmclient import HsmClient
-from pyhsm.hsmenums import HsmMech, HsmAttribute
-from pyhsm.convert import hex_to_bytes
+from os import environ
 
 from pyblake2 import blake2b
+from pyhsm.convert import hex_to_bytes
+from pyhsm.hsmclient import HsmClient
+from pyhsm.hsmenums import HsmAttribute, HsmMech
 
 from src.signer import Signer
 

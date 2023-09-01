@@ -1,13 +1,13 @@
-#!/usr/bin/env python3
+import logging
+from os import environ, path
 
-from flask import Flask, request, Response, json, jsonify
+from flask import Flask, Response, json, jsonify, request
 from werkzeug.exceptions import HTTPException
-from src.sigreq import SignatureReq
-from src.validatesigner import ValidateSigner
+
 from src.ddbchainratchet import DDBChainRatchet
 from src.hsmsigner import HsmSigner
-from os import path, environ
-import logging
+from src.sigreq import SignatureReq
+from src.validatesigner import ValidateSigner
 
 DEBUG = environ.get("DEBUG", None)
 
