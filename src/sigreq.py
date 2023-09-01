@@ -3,16 +3,18 @@ import string
 
 import bitcoin
 
-def get_be_int(bytes):
-    return struct.unpack('>L', bytes[0:4])[0]
 
-CHAIN_ID = get_be_int(b'\x00\x57\x52\x00')
+def get_be_int(bytes):
+    return struct.unpack(">L", bytes[0:4])[0]
+
+
+CHAIN_ID = get_be_int(b"\x00\x57\x52\x00")
+
 
 class SignatureReq:
-
     def __init__(self, hexdata):
         if not all(c in string.hexdigits for c in hexdata):
-            raise('Invalid signature request: not all hex digits')
+            raise ("Invalid signature request: not all hex digits")
 
         self.payload = hexdata
         data = bytes.fromhex(hexdata)
@@ -20,49 +22,49 @@ class SignatureReq:
         self.level = None
         self.chainid = bitcoin.bin_to_b58check(data[1:5], magicbyte=CHAIN_ID)
 
-        if data[0] == 0x01:     # Emmy block
-            self.type  = "Baking"
+        if data[0] == 0x01:  # Emmy block
+            self.type = "Baking"
             self.level = get_be_int(data[5:])
             self.round = 0
 
-        elif data[0] == 0x02:   # Emmy endorsement
-            self.type  = "Endorsement"
+        elif data[0] == 0x02:  # Emmy endorsement
+            self.type = "Endorsement"
             self.level = get_be_int(data[-4:])
             self.round = 0
 
-        elif data[0] == 0x03:   # Operation, for now, we only do ballots
+        elif data[0] == 0x03:  # Operation, for now, we only do ballots
             self.chainid = None
             self.type = "Unknown operation"
-            self.blockhash = data[1:32]         # The block hash
-            if data[33] == 0x06:                # 0x06 is a ballot
-                self.pkh_type = data[34]        # Public Key Hash type
-                self.pkh = data[35:55]          # Public Key Hash
+            self.blockhash = data[1:32]  # The block hash
+            if data[33] == 0x06:  # 0x06 is a ballot
+                self.pkh_type = data[34]  # Public Key Hash type
+                self.pkh = data[35:55]  # Public Key Hash
                 self.period = data[55:59]
                 self.proposal = data[59:91]
                 if data[91] == 0x00:
                     self.type = "Ballot"
-                    self.vote = 'yay'
+                    self.vote = "yay"
                 elif data[91] == 0x01:
                     self.type = "Ballot"
-                    self.vote = 'nay'
+                    self.vote = "nay"
                 elif data[91] == 0x02:
                     self.type = "Ballot"
-                    self.vote = 'pass'
+                    self.vote = "pass"
 
-        elif data[0] == 0x11:   # Tenderbake block
-            self.type  = "Baking"
+        elif data[0] == 0x11:  # Tenderbake block
+            self.type = "Baking"
             self.level = get_be_int(data[5:])
             fitness_sz = get_be_int(data[83:])
             offset = 87 + fitness_sz - 4
             self.round = get_be_int(data[offset:])
 
-        elif data[0] == 0x12:   # Tenderbake preendorsement
-            self.type  = "Preendorsement"
+        elif data[0] == 0x12:  # Tenderbake preendorsement
+            self.type = "Preendorsement"
             self.level = get_be_int(data[40:])
             self.round = get_be_int(data[44:])
 
-        elif data[0] == 0x13:   # Tenderbake endorsement
-            self.type  = "Endorsement"
+        elif data[0] == 0x13:  # Tenderbake endorsement
+            self.type = "Endorsement"
             self.level = get_be_int(data[40:])
             self.round = get_be_int(data[44:])
 
@@ -70,7 +72,7 @@ class SignatureReq:
             self.type = "Unknown tag"
 
         self.logstr = f"{self.chainid} {self.type}"
-        if self.level != None:
+        if self.level is not None:
             self.logstr += f" at {self.level}/{self.round}"
 
     def get_payload(self):

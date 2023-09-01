@@ -9,16 +9,19 @@ from src.hsmsigner import HsmSigner
 from os import path, environ
 import logging
 
-DEBUG = environ.get('DEBUG', None)
+DEBUG = environ.get("DEBUG", None)
+
 
 def logreq(sigreq, msg):
-    if sigreq != None:
+    if sigreq is not None:
         logging.info(f"Request: {sigreq.get_logstr()}:{msg}")
+
 
 FORMAT = "%(asctime)s %(threadName)s %(message)s"
 
 if DEBUG:
     from rich.logging import RichHandler
+
     logging.basicConfig(
         level="NOTSET",
         format=FORMAT,
@@ -26,9 +29,9 @@ if DEBUG:
         handlers=[RichHandler(show_path=False, level=logging.INFO)],
     )
 else:
-    logging.basicConfig(filename='./remote-signer.log',
-                        format=FORMAT,
-                        level=logging.INFO)
+    logging.basicConfig(
+        filename="./remote-signer.log", format=FORMAT, level=logging.INFO
+    )
 
 app = Flask(__name__)
 
@@ -53,9 +56,9 @@ app = Flask(__name__)
 #     }
 # }
 
-if path.isfile('keys.json'):
-    with open('keys.json', 'r') as myfile:
-        json_blob = myfile.read().replace('\n', '')
+if path.isfile("keys.json"):
+    with open("keys.json", "r") as myfile:
+        json_blob = myfile.read().replace("\n", "")
         config = json.loads(json_blob)
         logging.info(f"Loaded config contains: {json.dumps(config, indent=2)}")
 
@@ -63,38 +66,41 @@ if path.isfile('keys.json'):
 # We keep the ChainRatchet, HSM, and ValidateSigner outside sign()
 # so that they persist.
 
-cr  = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'], environ.get('BOTO3_ENDPOINT') if DEBUG else None)
+cr = DDBChainRatchet(
+    environ["REGION"],
+    environ["DDB_TABLE"],
+    environ.get("BOTO3_ENDPOINT") if DEBUG else None,
+)
 hsm = HsmSigner(config)
-rs  = ValidateSigner(config, ratchet=cr, subsigner=hsm)
+rs = ValidateSigner(config, ratchet=cr, subsigner=hsm)
 
-@app.route('/keys/<key_hash>', methods=['GET', 'POST'])
+
+@app.route("/keys/<key_hash>", methods=["GET", "POST"])
 def sign(key_hash):
     response = None
     sigreq = None
     try:
-        if key_hash in config['keys']:
-            key = config['keys'][key_hash]
-            if request.method == 'POST':
+        if key_hash in config["keys"]:
+            key = config["keys"][key_hash]
+            if request.method == "POST":
                 sigreq = SignatureReq(request.get_json(force=True))
-                response = jsonify({
-                    'signature': rs.sign(key['private_handle'], sigreq)
-                })
+                response = jsonify(
+                    {"signature": rs.sign(key["private_handle"], sigreq)}
+                )
             else:
-                response = jsonify({ 'public_key': key['public_key'] })
+                response = jsonify({"public_key": key["public_key"]})
         else:
             logging.warning(f"Couldn't find key {key_hash}")
-            response = Response('Key not found', status=404)
+            response = Response("Key not found", status=404)
     except HTTPException as e:
         logging.error(e)
         logreq(sigreq, "Failed")
         raise
     except Exception as e:
-        data = {'error': str(e)}
-        logging.error(f'Exception thrown during request: {str(e)}')
+        data = {"error": str(e)}
+        logging.error(f"Exception thrown during request: {str(e)}")
         response = app.response_class(
-            response=json.dumps(data),
-            status=500,
-            mimetype='application/json'
+            response=json.dumps(data), status=500, mimetype="application/json"
         )
         logreq(sigreq, "Failed")
         return response
@@ -104,14 +110,12 @@ def sign(key_hash):
     return response
 
 
-@app.route('/authorized_keys', methods=['GET'])
+@app.route("/authorized_keys", methods=["GET"])
 def authorized_keys():
     return app.response_class(
-        response=json.dumps({}),
-        status=200,
-        mimetype='application/json'
+        response=json.dumps({}), status=200, mimetype="application/json"
     )
 
 
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000, debug=True)
