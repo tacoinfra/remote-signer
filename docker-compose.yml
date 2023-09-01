@@ -30,7 +30,7 @@ services:
       BOTO3_ENDPOINT: 'http://dynamodb-local:8000'
       DYNAMO_DB_URL: 'http://dynamodb-local:8000'
       REGION: 'eu-west-1'
-      DDB_TABLE: 'ddb_table'
+      DDB_TABLE: 'test_table'
       HSM_PASSWORD: '1234' # strong :)
       DEBUG: '1'
     volumes:
