@@ -2,13 +2,19 @@ all: check zipfile
 
 DC=docker-compose
 
+scratch:
+	${DC} stop
+	docker build --no-cache -t remote-signer:latest .
+	docker build --no-cache -t remote-signer-dev:latest -f Dockerfile.dev . 
+	dc up --build --force-recreate -d signer && dc up -d
+
 rebuild:
 	${DC} stop
-	docker build -t remote-signer:latest .
+	docker build --no-cache -t remote-signer:latest .
 	${DC} up --build --force-recreate --no-deps -d
 
 .PHONY: test
-test: up
+test: up config
 	${DC} exec signer bash -c ' \
 	pytest \
 	'

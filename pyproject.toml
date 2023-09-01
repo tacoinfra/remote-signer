@@ -1,9 +1,9 @@
 [tool.pytest.ini_options]
 addopts = "-s"
-norecursedirs=["src/dyndbmutex",]
+norecursedirs=["src/dyndbmutex","src/bitcoin",]
 
 [tool.coverage.run]
-omit = [ "src/dyndbmutex/*", ]
+omit = [ "src/dyndbmutex/*", "src/bitcoin"]
 
 [tool.vulture]
 min_confidence = 80
@@ -43,5 +43,28 @@ exclude = [
 ignore_missing_imports = true
 disable_error_code = "misc"
 
-# [tool.django-stubs]
-# django_settings_module = "docker.conf.settings"
+
+[tool.poetry]
+name = "remote-signer"
+version = "0.1.0"
+description = ""
+authors = []
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+dyndbmutex = "0.4.0"
+bitcoin = {git = "https://github.com/tacoinfra/pybitcointools.git", rev = "aeb0a2bbb8bbfe421432d776c649650eaeb882a5"}
+py-hsm = "2.5.0"
+pyblake2 = "1.1.2"
+boto3 = "1.9.142"
+botocore = "1.12.142"
+werkzeug = "0.15.3"
+flask = "1.0.2"
+jinja2 = "2.11.3"
+markupsafe = "1.1.1"
+itsdangerous = "1.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
