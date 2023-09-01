@@ -10,6 +10,7 @@ min_confidence = 80
 paths = ["src"]
 sort_by_size = true
 ignore_names = ["schema_editor", "model_admin"]
+exclude = ["src/dyndbmutex",]
 
 [tool.ruff]
 line-length = 88

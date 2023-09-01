@@ -4,10 +4,10 @@ import unittest
 
 import bitcoin
 
+from src.chainratchet import MockChainRatchet
+from src.signer import Signer
 from src.sigreq import SignatureReq
 from src.validatesigner import ValidateSigner
-from src.signer import Signer
-from src.chainratchet import MockChainRatchet
 
 
 def eatwhite(str):
