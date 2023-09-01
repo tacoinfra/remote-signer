@@ -2,6 +2,9 @@
 addopts = "-s"
 norecursedirs=["src/dyndbmutex",]
 
+[tool.coverage.run]
+omit = [ "src/dyndbmutex/*", ]
+
 [tool.vulture]
 min_confidence = 80
 paths = ["src"]

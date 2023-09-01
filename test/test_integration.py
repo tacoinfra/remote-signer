@@ -5,6 +5,7 @@ from functools import partial
 from os import environ
 from test.test_remote_signer import valid_sig_reqs
 from test.utils import get_table, is_docker
+from unittest.mock import patch
 
 import boto3
 import pytest
@@ -13,8 +14,9 @@ from pyhsm.convert import hex_to_bytes
 from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmMech
 
-from signer import DEBUG, app, config
+from signer import DEBUG, app, config, cr, rs
 from src.hsmsigner import discover_handles
+from src.sigreq import SignatureReq
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -41,6 +43,8 @@ def build_client(config):
 
 SoftHsmClient = build_client(config)
 
+KEY = next(iter(config["keys"]))  # tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW
+
 
 @pytest.fixture()
 def client():
@@ -65,17 +69,13 @@ class TestIntegration:
             "dynamodb", region_name=cls.region_name, endpoint_url=cls.endpoint_url
         )
 
-    @classmethod
-    def teardown_class(cls):
-        print("Runs at end of class")
-
     def setup_method(self, _method):
         self.table = get_table(self.dbresource, self.dbclient, self.table_name)
 
     def teardown_method(self, _method):
         self.table.delete()
 
-    def test_softhsm_sign_bytes(self):
+    def test_softhsm_signs_and_verifies_bytes(self):
         with SoftHsmClient() as c:
             private_handle, public_handle = discover_handles(c)
             _bytes = hex_to_bytes("012346789abcdef0")
@@ -91,11 +91,49 @@ class TestIntegration:
             )
 
     def test_post(self, client):
-        for req in valid_sig_reqs[0:3]:
-            data = f'"{req[4]}"'
-            raw_response = client.post(
-                "/keys/tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW", data=data
-            )
+        def get_item(sigreq):
+            sig_type = f"{sigreq.get_type()}_{sigreq.get_chainid()}"
+            r = self.table.get_item(Key={"type": sig_type}, ConsistentRead=True)
+            return r.get("Item", None)
+
+        for req in valid_sig_reqs[0:3] + valid_sig_reqs[5:]:  # 4 fails due to ratchet
+            data = f'"{req[-1]}"'
+            sigreq = SignatureReq(json.loads(data))
+            assert sigreq.type == req[0]
+
+            if sigreq.type == "Ballot":
+
+                # sign success:
+                with patch.object(
+                    target=rs, attribute="policy", new={"voting": [sigreq.get_vote()]}
+                ):
+                    raw_response = client.post(f"/keys/{KEY}", data=data)
+                    assert raw_response.status == "200 OK"
+                    assert "signature" in raw_response.json
+
+                # sign fail:
+                with patch.object(cr, "check", return_value=None), patch.object(
+                    target=rs, attribute="policy", new={"voting": []}
+                ):
+                    raw_response = client.post(f"/keys/{KEY}", data=data)
+                    assert raw_response.status == "500 INTERNAL SERVER ERROR"
+
+                continue
+
+            # sign success:
+            assert get_item(sigreq) is None
+            raw_response = client.post(f"/keys/{KEY}", data=data)
             assert raw_response.status == "200 OK"
+            assert "signature" in raw_response.json
+
+            assert get_item(sigreq) is not None
+            # {'type': 'Baking_NetXH12Aer3be93', 'lastblock': Decimal('650'), 'lastround': Decimal('0')}
+
             response = json.loads(raw_response.data.decode())
             assert "signature" in response
+
+            assert sigreq.round == 0
+
+            # sign failure:
+            raw_response = client.post(f"/keys/{KEY}", data=data)
+            assert raw_response.status == "410 GONE"
