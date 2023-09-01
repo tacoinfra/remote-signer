@@ -30,7 +30,7 @@ class ValidateSigner:
             if 'voting' not in self.policy:
                 raise(Exception('Voting is against policy'))
             if sigreq.get_vote() not in self.policy['voting']:
-                raise(Exception(f'Voting "{self.get_vote()}" ' +
+                raise(Exception(f'Voting "{sigreq.get_vote()}" ' +
                                  'is against policy'))
             allowed = True
 

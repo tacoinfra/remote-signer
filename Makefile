@@ -52,7 +52,7 @@ config: up
 
 int integration: config
 	${DC} exec signer bash -c ' \
-	pytest test/integration.py\
+	pytest test/test_integration.py --cov=src\
 	'
 
 run: config
