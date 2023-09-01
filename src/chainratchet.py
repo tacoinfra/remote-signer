@@ -15,21 +15,26 @@
 
 from werkzeug.exceptions import abort
 
+
 class ChainRatchet:
-    def check(self, sig_type, level=0, round=0):
+    def check(self, _sig_type, level=0, round=0):
         if self.lastlevel < level:
             return True
         if self.lastlevel == level and self.lastround < round:
             return True
-        abort(410, f"Will not sign {level}/{round} because ratchet " +
-                   f"has seen {self.lastlevel}/{self.lastround}")
+        abort(
+            410,
+            f"Will not sign {level}/{round} because ratchet "
+            + f"has seen {self.lastlevel}/{self.lastround}",
+        )
+
 
 #
 # What follows is a mockery of a ChainRatchet.  It stores the level
 # in memory and is useful only for testing.
 
-class MockChainRatchet(ChainRatchet):
 
+class MockChainRatchet(ChainRatchet):
     def __init__(self, level=0, round=0):
         self.lastlevel = level
         self.lastround = round

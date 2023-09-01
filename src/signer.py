@@ -8,7 +8,7 @@ import struct
 import bitcoin
 
 # results in p2sig prefix when encoded with base58 (p2sig(98)):
-P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]
+P256_SIGNATURE = struct.unpack(">L", b"\x36\xF0\x2C\x34")[0]
 
 
 class Signer:
@@ -19,5 +19,5 @@ class Signer:
     def b58encode_signature(sig):
         return bitcoin.bin_to_b58check(sig, magicbyte=P256_SIGNATURE)
 
-    def sign(self, handle, sigreq):
-        raise(NotImplementedError("Unimplemented virtual method"))
+    def sign(self, *_args, **_kwargs):
+        raise (NotImplementedError("Unimplemented virtual method"))
