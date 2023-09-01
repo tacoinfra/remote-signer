@@ -10,7 +10,17 @@ rebuild:
 .PHONY: test
 test: up
 	${DC} exec signer bash -c ' \
-	python3 -m unittest test/test_remote_signer.py \
+	pytest \
+	'
+
+coverage: up
+	${DC} exec signer bash -c ' \
+	pytest --cov=src . \
+	'
+
+int integration: config
+	${DC} exec signer bash -c ' \
+	pytest test/test_integration.py \
 	'
 
 lint: up
@@ -27,11 +37,6 @@ mypy: up
 	mypy --check-untyped-defs src \
 	'
 
-coverage: up
-	${DC} exec signer bash -c ' \
-	pip3 install pytest-cov; \
-	pytest --cov=src . \
-	'
 
 down:
 	${DC} stop
@@ -48,11 +53,6 @@ bash: up
 config: up
 	${DC} exec signer bash -c ' \
 	cp /keys.json /code/keys.json \
-	'
-
-int integration: config
-	${DC} exec signer bash -c ' \
-	pytest test/test_integration.py --cov=src\
 	'
 
 run: config
