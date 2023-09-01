@@ -1,17 +1,17 @@
 import json
 import logging
 import sys
-import unittest
+from functools import partial
 from os import environ
 from test.test_remote_signer import valid_sig_reqs
-from unittest.mock import patch
+from test.utils import get_table, is_docker
 
 import boto3
-import botocore
+import pytest
 from pyblake2 import blake2b
 from pyhsm.convert import hex_to_bytes
 from pyhsm.hsmclient import HsmClient
-from pyhsm.hsmenums import HsmAttribute, HsmMech, HsmSymKeyGen
+from pyhsm.hsmenums import HsmMech
 
 from signer import DEBUG, app, config
 from src.hsmsigner import discover_handles
@@ -23,58 +23,38 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
+# guard
+if ("softhsm" not in config["hsm_lib"]) or (not DEBUG) or (not is_docker()):
+    raise ValueError(
+        "integration tests only run against softhsm in DEBUG mode in docker"
+    )
 
-class Integration(unittest.TestCase):
+
+def build_client(config):
+    hsm_slot = config["hsm_slot"]
+    hsm_user = config["hsm_username"]
+    hsm_password = environ["HSM_PASSWORD"]
+    hsm_pin = f"{hsm_user}:{hsm_password}"
+    hsm_libfile = config["hsm_lib"]
+    return partial(HsmClient, slot=hsm_slot, pin=hsm_pin, pkcs11_lib=hsm_libfile)
+
+
+SoftHsmClient = build_client(config)
+
+
+@pytest.fixture()
+def client():
+    return app.test_client()
+
+
+@pytest.fixture()
+def hsm_client():
+    return app.test_client()
+
+
+class TestIntegration:
     @classmethod
-    def create_table(cls):
-        try:
-            table = cls.dbresource.create_table(
-                TableName=cls.table_name,
-                KeySchema=[
-                    {"AttributeName": "type", "KeyType": "HASH"},  # Partition_key
-                ],
-                AttributeDefinitions=[
-                    {"AttributeName": "type", "AttributeType": "S"},
-                ],
-                ProvisionedThroughput={
-                    "ReadCapacityUnits": 10,
-                    "WriteCapacityUnits": 10,
-                },
-            )
-
-        except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "ResourceInUseException":
-                log.debug("Table already exists", exc_info=e)
-            else:
-                raise
-        else:
-            log.debug("Called create_table")
-            table.wait_until_exists()
-            log.info("Created table " + cls.table_name)
-            try:
-                cls.dbclient.update_time_to_live(
-                    TableName=cls.table_name,
-                    TimeToLiveSpecification={"Enabled": True, "AttributeName": "ttl"},
-                )
-            except botocore.exceptions.ClientError as e:
-                log.error("Error setting TTL on table", exc_info=e)
-            return table
-
-    @classmethod
-    def get_table(cls):
-        try:
-            cls.dbclient.describe_table(TableName=cls.table_name)
-        except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                return cls.create_table()
-            else:
-                raise
-        else:
-            log.info(f"found {cls.table_name}")
-            return cls.dbresource.Table(cls.table_name)
-
-    @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls.region_name = environ.get("REGION")
         cls.table_name = environ.get("DDB_TABLE")
         cls.endpoint_url = environ.get("BOTO3_ENDPOINT")
@@ -85,25 +65,21 @@ class Integration(unittest.TestCase):
             "dynamodb", region_name=cls.region_name, endpoint_url=cls.endpoint_url
         )
 
-    def setUp(self):
-        self.table = self.get_table()
+    @classmethod
+    def teardown_class(cls):
+        print("Runs at end of class")
 
-    def tearDown(self):
+    def setup_method(self, _method):
+        self.table = get_table(self.dbresource, self.dbclient, self.table_name)
+
+    def teardown_method(self, _method):
         self.table.delete()
 
     def test_softhsm_sign_bytes(self):
-
-        hsm_slot = config["hsm_slot"]
-        hsm_user = config["hsm_username"]
-        hsm_password = environ["HSM_PASSWORD"]
-        hsm_pin = f"{hsm_user}:{hsm_password}"
-        hsm_libfile = config["hsm_lib"]
-
-        with HsmClient(slot=hsm_slot, pin=hsm_pin, pkcs11_lib=hsm_libfile) as c:
+        with SoftHsmClient() as c:
             private_handle, public_handle = discover_handles(c)
             _bytes = hex_to_bytes("012346789abcdef0")
             hashed_data = blake2b(_bytes, digest_size=32).digest()
-            key_hash = "tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW"
             sig = c.sign(
                 handle=private_handle, data=hashed_data, mechanism=HsmMech.ECDSA
             )
@@ -114,13 +90,12 @@ class Integration(unittest.TestCase):
                 mechanism=HsmMech.ECDSA,
             )
 
-    def test_sin(self):
-        with app.test_client() as client:
-            for req in valid_sig_reqs[0:3]:
-                data = f'"{req[4]}"'
-                raw_response = client.post(
-                    "/keys/tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW", data=data
-                )
-                self.assertEqual(raw_response.status, "200 OK")
-                response = json.loads(raw_response.data.decode())
-                self.assertIn("signature", response)
+    def test_post(self, client):
+        for req in valid_sig_reqs[0:3]:
+            data = f'"{req[4]}"'
+            raw_response = client.post(
+                "/keys/tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW", data=data
+            )
+            assert raw_response.status == "200 OK"
+            response = json.loads(raw_response.data.decode())
+            assert "signature" in response

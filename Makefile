@@ -52,7 +52,7 @@ config: up
 
 int integration: config
 	${DC} exec signer bash -c ' \
-	python3 -m unittest test/integration.py \
+	pytest test/integration.py\
 	'
 
 run: config

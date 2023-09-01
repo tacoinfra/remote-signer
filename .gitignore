@@ -12,3 +12,4 @@ remote-signer.log
 .coverage
 docker/
 src/dyndbmutex/
+pyrightconfig.json

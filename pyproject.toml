@@ -1,3 +1,7 @@
+[tool.pytest.ini_options]
+addopts = "-s"
+norecursedirs=["src/dyndbmutex",]
+
 [tool.vulture]
 min_confidence = 80
 paths = ["src"]
