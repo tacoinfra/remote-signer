@@ -13,10 +13,16 @@
 #       keep self.lastlevel and self.lastround up to date before
 #       calling check().
 
+from abc import ABC
+
 from werkzeug.exceptions import abort
 
 
-class ChainRatchet:
+class ChainRatchet(ABC):
+
+    lastlevel: int
+    lastround: int
+
     def check(self, _sig_type, level=0, round=0):
         if self.lastlevel < level:
             return True
