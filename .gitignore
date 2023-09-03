@@ -6,7 +6,6 @@
 **/__pycache__
 **/*.pyc
 *.zip
-src/bitcoin
 keys.json
 remote-signer.log
 .coverage

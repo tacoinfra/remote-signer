@@ -1,9 +1,9 @@
 [tool.pytest.ini_options]
 addopts = "-s"
-norecursedirs=["src/dyndbmutex","src/bitcoin",]
+norecursedirs=["src/dyndbmutex"]
 
 [tool.coverage.run]
-omit = [ "src/dyndbmutex/*", "src/bitcoin"]
+omit = [ "src/dyndbmutex/*"]
 
 [tool.vulture]
 min_confidence = 80
@@ -54,7 +54,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.7"
 dyndbmutex = "0.4.0"
-bitcoin = {git = "https://github.com/tacoinfra/pybitcointools.git", rev = "aeb0a2bbb8bbfe421432d776c649650eaeb882a5"}
 py-hsm = "2.5.0"
 pyblake2 = "1.1.2"
 boto3 = "1.9.142"

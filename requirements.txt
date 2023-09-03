@@ -1,4 +1,3 @@
-bitcoin @ git+https://github.com/tacoinfra/pybitcointools.git@aeb0a2bbb8bbfe421432d776c649650eaeb882a5 ; python_version >= "3.7" and python_version < "4.0"
 boto3==1.9.142 ; python_version >= "3.7" and python_version < "4.0"
 botocore==1.12.142 ; python_version >= "3.7" and python_version < "4.0"
 click==8.1.7 ; python_version >= "3.7" and python_version < "4.0"

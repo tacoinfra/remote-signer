@@ -1,7 +1,7 @@
 import string
 import struct
 
-import bitcoin
+from src.py3specials import bin_to_b58check
 
 
 def get_be_int(bytes):
@@ -20,7 +20,7 @@ class SignatureReq:
         data = bytes.fromhex(hexdata)
 
         self.level = None
-        self.chainid = bitcoin.bin_to_b58check(data[1:5], magicbyte=CHAIN_ID)
+        self.chainid = bin_to_b58check(data[1:5], magicbyte=CHAIN_ID)
 
         if data[0] == 0x01:  # Emmy block
             self.type = "Baking"
