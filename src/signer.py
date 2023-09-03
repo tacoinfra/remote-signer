@@ -5,7 +5,7 @@
 
 import struct
 
-from src.py3specials import bin_to_b58check
+from src.bitcoin.py3specials import bin_to_b58check
 
 # results in p2sig prefix when encoded with base58 (p2sig(98)):
 P256_SIGNATURE = struct.unpack(">L", b"\x36\xF0\x2C\x34")[0]
