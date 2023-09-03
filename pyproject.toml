@@ -1,16 +1,16 @@
 [tool.pytest.ini_options]
 addopts = "-s"
-norecursedirs=["src/dyndbmutex"]
+# norecursedirs=["test/dyndbmutex"]
 
 [tool.coverage.run]
-omit = [ "src/dyndbmutex/*"]
+# omit = [ "test/dyndbmutex/*"]
 
 [tool.vulture]
 min_confidence = 80
 paths = ["src"]
 sort_by_size = true
-ignore_names = ["schema_editor", "model_admin"]
-exclude = ["src/dyndbmutex",]
+ignore_names = []
+# exclude = ["src/dyndbmutex",]
 
 [tool.ruff]
 line-length = 88
@@ -53,7 +53,6 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-dyndbmutex = "0.4.0"
 py-hsm = "2.5.0"
 pyblake2 = "1.1.2"
 boto3 = "1.9.142"

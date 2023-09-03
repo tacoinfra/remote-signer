@@ -1,5 +1,6 @@
 from test.test_remote_signer import P256_SIG, RAW_SIGNED_BLOCK, SIGNED_BLOCK
-from src.py3specials import bin_to_b58check
+from src.bitcoin.py3specials import bin_to_b58check
+
 
 def test_pybitcointools():
     """

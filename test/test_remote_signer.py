@@ -2,7 +2,7 @@ import re
 import struct
 import unittest
 
-from src.py3specials import bin_to_b58check
+from src.bitcoin.py3specials import bin_to_b58check
 
 from src.chainratchet import MockChainRatchet
 from src.signer import Signer

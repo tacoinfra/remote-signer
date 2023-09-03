@@ -1,7 +1,7 @@
 import string
 import struct
 
-from src.py3specials import bin_to_b58check
+from src.bitcoin.py3specials import bin_to_b58check
 
 
 def get_be_int(bytes):

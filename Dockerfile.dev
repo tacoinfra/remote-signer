@@ -5,8 +5,6 @@ RUN yum -y install gcc-c++ make automake autoconf libtool pkg-config openssl-dev
 
 # extra python dependencies
 RUN pip3 install poetry pre-commit ipython pudb rich-cli black==22.3.0 ruff isort flake8 mypy pytest-cov
-# install dyndb-mutex from source as 0.4.0 doesn't support endpoint_url
-RUN pip3 install -e git+https://github.com/chiradeep/dyndb-mutex@a39d06f06b5602d6fea98eea39247f337526c25c#egg=dyndbmutex
 
 WORKDIR /
 
