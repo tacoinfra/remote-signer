@@ -2,22 +2,24 @@ all: check zipfile
 
 DC=docker-compose
 
-scratch:
-	${DC} stop
-	docker build --no-cache -t remote-signer:latest .
-	docker build --no-cache -t remote-signer-dev:latest -f Dockerfile.dev . 
-	dc up --build --force-recreate -d signer && dc up -d
-
 rebuild:
 	${DC} stop
 	docker build --no-cache -t remote-signer:latest .
-	${DC} up --build --force-recreate --no-deps -d
+	docker build --no-cache -t remote-signer-dev:latest -f Dockerfile.dev . 
+	${DC} up --build --force-recreate -d signer 
+	${DC} up -d
 
+# make test
+# make test TEST=test_pybitcointools
 .PHONY: test
 test: up config
-	${DC} exec signer bash -c ' \
-	pytest \
-	'
+	@${DC} exec signer bash -c " \
+		if [ -z "$(TEST)" ]; then \
+			pytest; \
+		else \
+			pytest -k $(TEST); \
+		fi \
+	"
 
 coverage: up
 	${DC} exec signer bash -c ' \

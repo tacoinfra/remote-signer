@@ -2,7 +2,7 @@ import re
 import struct
 import unittest
 
-import bitcoin
+from src.py3specials import bin_to_b58check
 
 from src.chainratchet import MockChainRatchet
 from src.signer import Signer
@@ -17,7 +17,7 @@ def eatwhite(str):
 # results in p2sig prefix when encoded with base58 (p2sig(98)):
 P256_SIG = struct.unpack(">L", b"\x36\xF0\x2C\x34")[0]
 RAW_SIGNED_BLOCK = b"0123456789012345678901"
-SIGNED_BLOCK = bitcoin.bin_to_b58check(RAW_SIGNED_BLOCK, magicbyte=P256_SIG)
+SIGNED_BLOCK = bin_to_b58check(RAW_SIGNED_BLOCK, magicbyte=P256_SIG)
 
 #
 # Here's a quick invalid block that we'll make sure that we don't process:
