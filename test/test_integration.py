@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import sys
@@ -9,7 +10,6 @@ from unittest.mock import patch
 
 import boto3
 import pytest
-from pyblake2 import blake2b
 from pyhsm.convert import hex_to_bytes
 from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmMech
@@ -73,13 +73,15 @@ class TestIntegration:
         self.table = get_table(self.dbresource, self.dbclient, self.table_name)
 
     def teardown_method(self, _method):
-        self.table.delete()
+        if "test_leave_db_intact" not in str(_method):
+            self.table.delete()
 
     def test_softhsm_signs_and_verifies_bytes(self):
         with SoftHsmClient() as c:
             private_handle, public_handle = discover_handles(c)
             _bytes = hex_to_bytes("012346789abcdef0")
-            hashed_data = blake2b(_bytes, digest_size=32).digest()
+            hashed_data = hashlib.blake2b(_bytes, digest_size=32).digest()
+
             sig = c.sign(
                 handle=private_handle, data=hashed_data, mechanism=HsmMech.ECDSA
             )
@@ -137,3 +139,10 @@ class TestIntegration:
             # sign failure:
             raw_response = client.post(f"/keys/{KEY}", data=data)
             assert raw_response.status == "410 GONE"
+
+    def test_leave_db_intact(self):
+        """
+        Leave this test last to leave a copy of the dynamodb
+        database table so `make run` will work.
+        """
+        assert 1

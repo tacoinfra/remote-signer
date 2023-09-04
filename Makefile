@@ -14,6 +14,7 @@ rebuild:
 .PHONY: test
 test: up config
 	@${DC} exec signer bash -c " \
+		source /src/env/bin/activate; \
 		if [ -z "$(TEST)" ]; then \
 			pytest; \
 		else \
@@ -23,18 +24,21 @@ test: up config
 
 coverage: up
 	${DC} exec signer bash -c ' \
-	pytest --cov=src . \
+		source /src/env/bin/activate; \
+		pytest --cov=src . \
 	'
 
 int integration: config
 	${DC} exec signer bash -c ' \
-	pytest test/test_integration.py \
+		source /src/env/bin/activate; \
+		pytest test/test_integration.py \
 	'
 
 lint: up
 	${DC} exec signer bash -c ' \
-	git config --global --add safe.directory "$${PWD}"; \
-	pre-commit run --all-files \
+		source /src/env/bin/activate; \
+		git config --global --add safe.directory "$${PWD}"; \
+		pre-commit run --all-files \
 	'
 
 # see pyproject.toml for which
@@ -42,9 +46,9 @@ lint: up
 # eg: pip install mypy django-stubs
 mypy: up
 	${DC} exec signer bash -c ' \
-	mypy --check-untyped-defs src \
+		source /src/env/bin/activate; \
+		mypy --check-untyped-defs src \
 	'
-
 
 down:
 	${DC} stop
@@ -60,13 +64,15 @@ bash: up
 
 config: up
 	${DC} exec signer bash -c ' \
-	cp /keys.json /code/keys.json \
+		cp /keys.json /code/keys.json \
 	'
 
 run: config
 	@${DC} exec signer bash -c ' \
-	echo ♉ dyanamo db: $$DYNAMO_DB_URL; \
-	FLASK_APP="signer" /usr/local/bin/flask  run --reload --host=0.0.0.0 \
+		echo ♉ DYNAMO_DB_URL: $$DYNAMO_DB_URL; \
+		echo ♉ DDB_TABLE: $$DDB_TABLE; \
+		source /src/env/bin/activate; \
+		FLASK_APP="signer" /src/env/bin/flask  run --reload --host=0.0.0.0 \
 	'
 
 # GE: older targets for reference

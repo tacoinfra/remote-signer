@@ -1,49 +1,56 @@
+# isort: skip_file
+import base64
+import os
 import time
 import unittest
-import base64
-import sys
 import warnings
-import os
-from os import path
+from concurrent.futures import ThreadPoolExecutor
+
+from src.dyndbmutex.dyndbmutex import (
+    AcquireLockFailedError,
+    DynamoDbMutex,
+    setup_logging,
+)
+
 """
 Taken from: https://raw.githubusercontent.com/chiradeep/dyndb-mutex/a39d06f06b5602d6fea98eea39247f337526c25c/test/test_mutex.py
 """
 
-from concurrent.futures import ThreadPoolExecutor
-
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-from src.dyndbmutex.dyndbmutex import DynamoDbMutex, AcquireLockFailedError, setup_logging
-
 
 def random_name():
-    return base64.b32encode(os.urandom(5))[:7].decode('ascii')
+    return base64.b32encode(os.urandom(5))[:7].decode("ascii")
 
 
 class TestDynamoDbMutex(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         setup_logging()
         super(TestDynamoDbMutex, cls).setUpClass()
 
     def setUp(self):
-        #python 3.6 emits warnings due to requests which can be ignoredz
+        # python 3.6 emits warnings due to requests which can be ignoredz
         try:
-            warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed.*<ssl.SSLSocket.*>")
+            warnings.filterwarnings(
+                "ignore",
+                category=ResourceWarning,
+                message="unclosed.*<ssl.SSLSocket.*>",
+            )
         except NameError:
             # thrown in python 2.7 as ResourceWarning is not defined
             pass
+
     def test_create(self):
         m = DynamoDbMutex(random_name(), "myself", 3 * 1000)
-        assert(m.lock())
+        assert m.lock()
         m.release()
 
     def test_create_delete_us_east_1(self):
-        m = DynamoDbMutex(name=random_name(), holder=random_name(),
-                          region_name='us-east-1')
-        assert(m.lock())
+        m = DynamoDbMutex(
+            name=random_name(), holder=random_name(), region_name="us-east-1"
+        )
+        assert m.lock()
         m.release()
-        DynamoDbMutex.delete_table(region_name='us-east-1')
+        DynamoDbMutex.delete_table(region_name="us-east-1")
 
     def test_timeout(self):
         m = DynamoDbMutex(random_name(), "myself", 3 * 1000)
@@ -97,28 +104,28 @@ class TestDynamoDbMutex(unittest.TestCase):
         m2.release()
 
     def test_ttl(self):
-        os.environ['DD_MUTEX_TABLE_NAME'] = random_name()
+        os.environ["DD_MUTEX_TABLE_NAME"] = random_name()
         name = random_name()
         caller = "myself"
         m1 = DynamoDbMutex(name=name, holder=caller, timeoutms=2 * 1000, ttl_minutes=2)
         m1.lock()
         item = m1.get_raw_lock()
-        diff = item['Item']['ttl'] - item['Item']['expire_ts'] // 1000
-        print (diff)
-        self.assertTrue(diff > 0 and diff <= 2*60)
+        diff = item["Item"]["ttl"] - item["Item"]["expire_ts"] // 1000
+        print(diff)
+        self.assertTrue(diff > 0 and diff <= 2 * 60)
         DynamoDbMutex.delete_table()
-        del os.environ['DD_MUTEX_TABLE_NAME']
+        del os.environ["DD_MUTEX_TABLE_NAME"]
 
     def test_table_creation_race(self):
-        old_table_name = os.environ.get('DD_MUTEX_TABLE_NAME')
+        old_table_name = os.environ.get("DD_MUTEX_TABLE_NAME")
         try:
-            table_name = 'Mutex-' + random_name()
-            os.environ['DD_MUTEX_TABLE_NAME'] = table_name
+            table_name = "Mutex-" + random_name()
+            os.environ["DD_MUTEX_TABLE_NAME"] = table_name
             cls = DynamoDbMutex
 
             def create_mutex(i):
                 mutex_name = random_name()
-                mutex = cls(name=mutex_name, holder='caller%i' % i)
+                mutex = cls(name=mutex_name, holder="caller%i" % i)
                 self.assertEqual(mutex.table.table_name, table_name)
                 return mutex
 
@@ -129,9 +136,9 @@ class TestDynamoDbMutex(unittest.TestCase):
                     pool.map(method, mutexes)
         finally:
             if old_table_name is None:
-                del os.environ['DD_MUTEX_TABLE_NAME']
+                del os.environ["DD_MUTEX_TABLE_NAME"]
             else:
-                os.environ['DD_MUTEX_TABLE_NAME'] = old_table_name
+                os.environ["DD_MUTEX_TABLE_NAME"] = old_table_name
 
 
 if __name__ == "__main__":
