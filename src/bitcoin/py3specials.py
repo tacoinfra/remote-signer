@@ -1,6 +1,7 @@
-import sys, os
 import binascii
 import hashlib
+import os
+import sys
 
 """
 Taken from https://raw.githubusercontent.com/tacoinfra/pybitcointools/aeb0a2bbb8bbfe421432d776c649650eaeb882a5/bitcoin/py3specials.py
@@ -8,17 +9,17 @@ Taken from https://raw.githubusercontent.com/tacoinfra/pybitcointools/aeb0a2bbb8
 
 
 if sys.version_info.major == 3:
-    string_types = (str)
+    string_types = str
     string_or_bytes_types = (str, bytes)
     int_types = (int, float)
     # Base switching
     code_strings = {
-        2: '01',
-        10: '0123456789',
-        16: '0123456789abcdef',
-        32: 'abcdefghijklmnopqrstuvwxyz234567',
-        58: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
-        256: ''.join([chr(x) for x in range(256)])
+        2: "01",
+        10: "0123456789",
+        16: "0123456789abcdef",
+        32: "abcdefghijklmnopqrstuvwxyz234567",
+        58: "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+        256: "".join([chr(x) for x in range(256)]),
     }
 
     def bin_dbl_sha256(s):
@@ -55,19 +56,19 @@ if sys.version_info.major == 3:
             leadingzbytes += 1
 
         checksum = bin_dbl_sha256(inp)[:4]
-        return '1' * leadingzbytes + changebase(inp+checksum, 256, 58)
+        return "1" * leadingzbytes + changebase(inp + checksum, 256, 58)
 
     def bytes_to_hex_string(b):
         if isinstance(b, str):
             return b
 
-        return ''.join('{:02x}'.format(y) for y in b)
+        return "".join("{:02x}".format(y) for y in b)
 
     def safe_from_hex(s):
         return bytes.fromhex(s)
 
     def from_int_representation_to_bytes(a):
-        return bytes(str(a), 'utf-8')
+        return bytes(str(a), "utf-8")
 
     def from_int_to_byte(a):
         return bytes([a])
@@ -76,10 +77,10 @@ if sys.version_info.major == 3:
         return a
 
     def from_string_to_bytes(a):
-        return a if isinstance(a, bytes) else bytes(a, 'utf-8')
+        return a if isinstance(a, bytes) else bytes(a, "utf-8")
 
     def safe_hexlify(a):
-        return str(binascii.hexlify(a), 'utf-8')
+        return str(binascii.hexlify(a), "utf-8")
 
     def encode(val, base, minlen=0):
         base, minlen = int(base), int(minlen)
@@ -92,12 +93,11 @@ if sys.version_info.major == 3:
 
         pad_size = minlen - len(result_bytes)
 
-        padding_element = b'\x00' if base == 256 else b'1' \
-            if base == 58 else b'0'
-        if (pad_size > 0):
-            result_bytes = padding_element*pad_size + result_bytes
+        padding_element = b"\x00" if base == 256 else b"1" if base == 58 else b"0"
+        if pad_size > 0:
+            result_bytes = padding_element * pad_size + result_bytes
 
-        result_string = ''.join([chr(y) for y in result_bytes])
+        result_string = "".join([chr(y) for y in result_bytes])
         result = result_bytes if base == 256 else result_string
 
         return result
@@ -109,9 +109,12 @@ if sys.version_info.major == 3:
         code_string = get_code_string(base)
         result = 0
         if base == 256:
+
             def extract(d, cs):
                 return d
+
         else:
+
             def extract(d, cs):
                 return cs.find(d if isinstance(d, str) else chr(d))
 

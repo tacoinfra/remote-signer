@@ -3,7 +3,6 @@ import struct
 import unittest
 
 from src.bitcoin.py3specials import bin_to_b58check
-
 from src.chainratchet import MockChainRatchet
 from src.signer import Signer
 from src.sigreq import SignatureReq

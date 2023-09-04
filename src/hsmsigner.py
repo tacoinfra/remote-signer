@@ -1,8 +1,8 @@
+import hashlib
 import logging
 import threading
 from os import environ
 
-from pyblake2 import blake2b
 from pyhsm.convert import hex_to_bytes
 from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmAttribute, HsmMech
@@ -39,7 +39,10 @@ class HsmSigner(Signer):
             with HsmClient(
                 slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile
             ) as c:
-                hashed_data = blake2b(
+                #  hashed_data = blake2b(
+                #      hex_to_bytes(sigreq.get_payload()), digest_size=32
+                #  ).digest()
+                hashed_data = hashlib.blake2b(
                     hex_to_bytes(sigreq.get_payload()), digest_size=32
                 ).digest()
                 logging.debug(f"Hashed data to sign: {hashed_data}")

@@ -7,8 +7,8 @@ import boto3
 from botocore.exceptions import ClientError
 from werkzeug.exceptions import abort
 
-from src.dyndbmutex.dyndbmutex import AcquireLockFailedError, DynamoDbMutex
 from src.chainratchet import ChainRatchet
+from src.dyndbmutex.dyndbmutex import AcquireLockFailedError, DynamoDbMutex
 
 logging.getLogger("dyndbmutex").setLevel(logging.CRITICAL)
 

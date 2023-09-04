@@ -1,0 +1,12 @@
+[flake8]
+max-line-length = 88
+max-complexity = 18
+select = B,C,E,F,W,T4,B9
+ignore = E501, W503, F403, E722, F405, E203, C901
+
+# E501 line too long 
+# W503 linebreak before binary operator
+# F403 from module import *’ used; unable to detect undefined names
+
+# E722 do not use bare 'except'
+# F405 star imports

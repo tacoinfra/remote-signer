@@ -52,16 +52,11 @@ authors = []
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.7"
-py-hsm = "2.5.0"
-pyblake2 = "1.1.2"
-boto3 = "1.9.142"
-botocore = "1.12.142"
-werkzeug = "0.15.3"
-flask = "1.0.2"
-jinja2 = "2.11.3"
-markupsafe = "1.1.1"
-itsdangerous = "1.1.0"
+python = "^3.11"
+flask = "^2.3.3"
+boto3 = "^1.28.40"
+botocore = "^1.31.40"
+py-hsm = "^2.5.0"
 
 [build-system]
 requires = ["poetry-core"]

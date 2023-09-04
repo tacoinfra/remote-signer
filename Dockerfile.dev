@@ -1,25 +1,27 @@
 FROM remote-signer
 
 # extra build dependencies
-RUN yum -y install gcc-c++ make automake autoconf libtool pkg-config openssl-devel gnutls-utils
-
-# extra python dependencies
-RUN pip3 install poetry pre-commit ipython pudb rich-cli black==22.3.0 ruff isort flake8 mypy pytest-cov
-
-WORKDIR /
-
-# libhsm
-# https://github.com/bentonstark/libhsm
-RUN git clone https://github.com/bentonstark/libhsm.git
-RUN (cd ./libhsm/build; ./build_libhsm; cp libhsm.so /usr/lib64/libhsm.so)
+RUN yum -y install git gcc-c++ make automake autoconf libtool pkg-config openssl-devel gnutls-utils
 
 # SoftHSMv2
 # https://github.com/opendnssec/SoftHSMv2
-RUN git clone https://github.com/opendnssec/SoftHSMv2
-RUN (cd SoftHSMv2; sh autogen.sh; ./configure; make; make install)
+RUN set -x; \
+    cd /usr/src; \
+    git clone https://github.com/opendnssec/SoftHSMv2; \
+    (cd SoftHSMv2; sh autogen.sh; ./configure; make; make install)
 
-# set up token and create /keys.json
+# set up SoftHSMv2 token and create /keys.json
 COPY scripts/create_keys_dot_json.sh /
-RUN /create_keys_dot_json.sh
+RUN set -x;  \
+    /create_keys_dot_json.sh; \
+    rm /create_keys_dot_json.sh
 
+# extra python dependencies
+ENV PYTHON_DEV_DEPS="poetry pre-commit ipython pudb rich-cli black==22.3.0 ruff isort flake8 mypy pytest-cov"
+RUN set -x; \
+    source /src/env/bin/activate; \
+    pip install ${PYTHON_DEV_DEPS}
+
+# this is where we will mount the source code
+# to avoid overriting venv in `/src/env`
 WORKDIR /code

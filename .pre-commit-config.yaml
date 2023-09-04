@@ -9,10 +9,10 @@ repos:
     hooks:
     - id: black
       args: [--check]
-# -   repo: https://github.com/pycqa/flake8
-#     rev: 3.8.4
-#     hooks:
-#     -   id: flake8
+-   repo: https://github.com/pycqa/flake8
+    rev: 3.8.4
+    hooks:
+    -   id: flake8
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.3.0
     hooks:

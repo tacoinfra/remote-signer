@@ -14,19 +14,25 @@ TOKEN=$(${P11TOOL} --list-tokens | head -2 | sed -n 's/\sURL:\s\(.*\)/\1/p')
 ${P11TOOL} --login --generate-ecc --label "MyNewKey" "${TOKEN}"
 
 # 3. get the public_handle, private_handle of the above key pair
-HANDLES=$(
-python3 - ${SOFTHSM_SLOT} ${GNUTLS_PIN}  ${HSM_LIBFILE} <<EOF 
-import sys
-from pyhsm.hsmclient import HsmClient
-hsm_slot=int(sys.argv[1])
-hsm_pin = sys.argv[2]
-hsm_libfile= sys.argv[3]
-c = HsmClient(slot=hsm_slot, pin=hsm_pin, pkcs11_lib=hsm_libfile)
-public_handle, private_handle = c.find_objects() # 2,3
-print(f'{public_handle}-{private_handle}')
-EOF
-)
-IFS=- read -r PUBLIC_HANDLE PRIVATE_HANDLE <<< ${HANDLES}
+# HANDLES=$(
+# python3 - ${SOFTHSM_SLOT} ${GNUTLS_PIN}  ${HSM_LIBFILE} <<EOF 
+# import sys
+# from pyhsm.hsmclient import HsmClient
+# hsm_slot=int(sys.argv[1])
+# hsm_pin = sys.argv[2]
+# hsm_libfile= sys.argv[3]
+# c = HsmClient(slot=hsm_slot, pin=hsm_pin, pkcs11_lib=hsm_libfile)
+# public_handle, private_handle = c.find_objects() # 2,3
+# print(f'{public_handle}-{private_handle}')
+# EOF
+# )
+# IFS=- read -r PUBLIC_HANDLE PRIVATE_HANDLE <<< ${HANDLES}
+
+# softhsm returns the handles in indeterminate order
+# so we just pass in dummy values here and interrogate
+# the API on each pkcs11 session
+PRIVATE_HANDLE=2
+PUBLIC_HANDLE=3
 
 # 4. generate the config file for the service
 cat << EOF > /keys.json
