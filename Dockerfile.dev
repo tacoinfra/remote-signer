@@ -11,8 +11,11 @@ RUN set -x; \
     (cd SoftHSMv2; sh autogen.sh; ./configure; make; make install)
 
 # set up SoftHSMv2 token and create /keys.json
-COPY scripts/create_keys_dot_json.sh /
+RUN set -x
+COPY scripts/create_keys_dot_json.sh  /
 RUN set -x;  \
+    source /src/env/bin/activate; \
+    pip install python-pkcs11; \
     /create_keys_dot_json.sh; \
     rm /create_keys_dot_json.sh
 

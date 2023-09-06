@@ -14,25 +14,24 @@ TOKEN=$(${P11TOOL} --list-tokens | head -2 | sed -n 's/\sURL:\s\(.*\)/\1/p')
 ${P11TOOL} --login --generate-ecc --label "MyNewKey" "${TOKEN}"
 
 # 3. get the public_handle, private_handle of the above key pair
-# HANDLES=$(
-# python3 - ${SOFTHSM_SLOT} ${GNUTLS_PIN}  ${HSM_LIBFILE} <<EOF 
-# import sys
-# from pyhsm.hsmclient import HsmClient
-# hsm_slot=int(sys.argv[1])
-# hsm_pin = sys.argv[2]
-# hsm_libfile= sys.argv[3]
-# c = HsmClient(slot=hsm_slot, pin=hsm_pin, pkcs11_lib=hsm_libfile)
-# public_handle, private_handle = c.find_objects() # 2,3
-# print(f'{public_handle}-{private_handle}')
-# EOF
-# )
-# IFS=- read -r PUBLIC_HANDLE PRIVATE_HANDLE <<< ${HANDLES}
-
-# softhsm returns the handles in indeterminate order
-# so we just pass in dummy values here and interrogate
-# the API on each pkcs11 session
-PRIVATE_HANDLE=2
-PUBLIC_HANDLE=3
+HANDLES=$(
+python3 - ${SOFTHSM_SLOT} ${GNUTLS_PIN}  ${HSM_LIBFILE} <<EOF 
+from sys import argv
+import pkcs11
+hsm_slot = int(argv[1])
+hsm_pin =  argv[2]
+hsm_libfile = argv[3]
+lib = pkcs11.lib(hsm_libfile)
+slots = { slot.slot_id: slot for slot in  lib.get_slots() }
+slot = slots.get(hsm_slot)
+token = slot.get_token()
+with token.open(user_pin=hsm_pin) as session:
+    private_key = session.get_key(object_class=pkcs11.constants.ObjectClass.PRIVATE_KEY)
+    public_key = session.get_key(object_class=pkcs11.constants.ObjectClass.PUBLIC_KEY)
+    print(f'{private_key._handle}-{public_key._handle}')
+EOF
+)
+IFS=- read -r PRIVATE_HANDLE PUBLIC_HANDLE  <<< ${HANDLES}
 
 # 4. generate the config file for the service
 cat << EOF > /keys.json
