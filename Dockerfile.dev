@@ -1,7 +1,19 @@
 FROM remote-signer
 
 # extra build dependencies
-RUN yum -y install git gcc-c++ make automake autoconf libtool pkg-config openssl-devel gnutls-utils
+RUN BUILD_DEPS=" \
+    git \
+    gcc-c++ \
+    make \
+    automake \
+    autoconf \
+    libtool \
+    pkg-config \
+    openssl-devel \
+    gnutls-utils \
+    python3.11-devel.x86_64 \
+    "; \
+    yum -y install ${BUILD_DEPS}
 
 # SoftHSMv2
 # https://github.com/opendnssec/SoftHSMv2
@@ -10,20 +22,30 @@ RUN set -x; \
     git clone https://github.com/opendnssec/SoftHSMv2; \
     (cd SoftHSMv2; sh autogen.sh; ./configure; make; make install)
 
+# extra python dependencies
+RUN set -x; \
+    PYTHON_DEV_DEPS=" \
+    python-pkcs11 \
+    poetry  \
+    pre-commit  \
+    ipython  \
+    pudb  \
+    rich-cli  \
+    black==22.3.0  \
+    ruff  \
+    isort  \
+    flake8  \
+    mypy  \
+    pytest-cov"; \
+    source /src/env/bin/activate; \
+    pip install ${PYTHON_DEV_DEPS}
+
 # set up SoftHSMv2 token and create /keys.json
-RUN set -x
 COPY scripts/create_keys_dot_json.sh  /
 RUN set -x;  \
     source /src/env/bin/activate; \
-    pip install python-pkcs11; \
     /create_keys_dot_json.sh; \
     rm /create_keys_dot_json.sh
-
-# extra python dependencies
-ENV PYTHON_DEV_DEPS="poetry pre-commit ipython pudb rich-cli black==22.3.0 ruff isort flake8 mypy pytest-cov"
-RUN set -x; \
-    source /src/env/bin/activate; \
-    pip install ${PYTHON_DEV_DEPS}
 
 # this is where we will mount the source code
 # to avoid overriting venv in `/src/env`
