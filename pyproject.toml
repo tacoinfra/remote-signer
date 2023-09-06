@@ -1,9 +1,9 @@
 [tool.pytest.ini_options]
 addopts = "-s"
-# norecursedirs=["test/dyndbmutex"]
+norecursedirs=["test/dyndbmutex"]
 
 [tool.coverage.run]
-# omit = [ "test/dyndbmutex/*"]
+omit = [ "test/dyndbmutex/*"]
 
 [tool.vulture]
 min_confidence = 80

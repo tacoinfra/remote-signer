@@ -39,18 +39,16 @@ class HsmSigner(Signer):
             with HsmClient(
                 slot=self.hsm_slot, pin=self.hsm_pin, pkcs11_lib=self.hsm_libfile
             ) as c:
-                #  hashed_data = blake2b(
-                #      hex_to_bytes(sigreq.get_payload()), digest_size=32
-                #  ).digest()
                 hashed_data = hashlib.blake2b(
                     hex_to_bytes(sigreq.get_payload()), digest_size=32
                 ).digest()
                 logging.debug(f"Hashed data to sign: {hashed_data}")
-                if environ.get("DEBUG", None):
+                if "libsofthsm2.so" in self.hsm_libfile:
                     """
                     with softhsm, pkcs11 returns different handles
                     in each session so we have to interrogate the API
-                    every time:
+                    every time. we should check how cloudhsm behaves.
+                    https://security.stackexchange.com/questions/205360/can-pkcs-11-object-handles-be-used-across-sessions
                     """
                     private_handle, _public_handle = discover_handles(c)
                     handle = private_handle
