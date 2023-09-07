@@ -2,7 +2,11 @@ all: check zipfile
 
 DC=docker-compose
 
-rebuild:
+build: 
+	${DC} up --build --force-recreate -d signer 
+	${DC} up -d
+
+rebuild: zipfile
 	${DC} stop
 	docker build --no-cache -t remote-signer:latest .
 	docker build --no-cache -t remote-signer-dev:latest -f Dockerfile.dev . 
@@ -14,7 +18,8 @@ rebuild:
 .PHONY: test
 test: up config
 	@${DC} exec signer bash -c " \
-		source /src/env/bin/activate; \
+		set -x; \
+		source /home/ec2-user/env/bin/activate; \
 		if [ -z "$(TEST)" ]; then \
 			pytest; \
 		else \
@@ -22,21 +27,26 @@ test: up config
 		fi \
 	"
 
+config: up
+	${DC} exec signer bash -c ' \
+		cp /home/ec2-user/keys.json /code/keys.json \
+	'
+
 coverage: up
 	${DC} exec signer bash -c ' \
-		source /src/env/bin/activate; \
+		source /home/ec2-user/env/bin/activate; \
 		pytest --cov=src . \
 	'
 
 int integration: config
 	${DC} exec signer bash -c ' \
-		source /src/env/bin/activate; \
+		source /home/ec2-user/env/bin/activate; \
 		pytest test/test_integration.py \
 	'
 
 lint: up
 	${DC} exec signer bash -c ' \
-		source /src/env/bin/activate; \
+		source /home/ec2-user/env/bin/activate; \
 		git config --global --add safe.directory "$${PWD}"; \
 		pre-commit run --all-files \
 	'
@@ -46,7 +56,7 @@ lint: up
 # eg: pip install mypy django-stubs
 mypy: up
 	${DC} exec signer bash -c ' \
-		source /src/env/bin/activate; \
+		source /home/ec2-user/env/bin/activate; \
 		mypy --check-untyped-defs src \
 	'
 
@@ -62,17 +72,20 @@ ps:
 bash: up
 	${DC} exec signer bash
 
-config: up
-	${DC} exec signer bash -c ' \
-		cp /keys.json /code/keys.json \
+# runs off the unpacked zipfile, not a live reload
+run: 
+	@${DC} exec signer bash -c ' \
+		/home/ec2-user/src/start-remote-signer.sh; \
 	'
 
-run: config
+# live reload
+debug: config
 	@${DC} exec signer bash -c ' \
+		source /home/ec2-user/env/bin/activate; \
+		cd /code; \
 		echo ♉ DYNAMO_DB_URL: $$DYNAMO_DB_URL; \
 		echo ♉ DDB_TABLE: $$DDB_TABLE; \
-		source /src/env/bin/activate; \
-		FLASK_APP="signer" /src/env/bin/flask  run --reload --host=0.0.0.0 \
+		FLASK_APP="signer" /home/ec2-user/env/bin/flask  run --reload --host=0.0.0.0 \
 	'
 
 # GE: older targets for reference
@@ -81,7 +94,7 @@ docker:
 	docker build -t remote-signer .
 
 zipfile:
-	zip remote-signer.zip requirements.txt *.py src/*.py src/*.sh
+	zip remote-signer.zip requirements.txt *.py src/**/*.py src/*.sh
 
 check:
 	python3 -m unittest test/test_remote_signer.py
