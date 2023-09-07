@@ -11,7 +11,7 @@ HSM_LIBFILE='/usr/local/lib/softhsm/libsofthsm2.so'
 export GNUTLS_PIN="${HSM_USER}:${HSM_PASSWORD}"
 P11TOOL="p11tool --provider ${HSM_LIBFILE}"
 TOKEN=$(${P11TOOL} --list-tokens | head -2 | sed -n 's/\sURL:\s\(.*\)/\1/p')
-${P11TOOL} --login --generate-ecc --label "MyNewKey" "${TOKEN}"
+${P11TOOL} --login --generate-ecc --label "MyNewKey" --outfile /dev/null "${TOKEN}"
 
 # 3. get the public_handle, private_handle of the above key pair
 HANDLES=$(
@@ -33,8 +33,8 @@ EOF
 )
 IFS=- read -r PRIVATE_HANDLE PUBLIC_HANDLE  <<< ${HANDLES}
 
-# 4. generate the config file for the service
-cat << EOF > /keys.json
+# 4. generate the config file for the service,
+cat << EOF > /home/ec2-user/keys.json
 {
     "hsm_username": "resigner",
     "hsm_slot": ${SOFTHSM_SLOT},
@@ -52,4 +52,3 @@ cat << EOF > /keys.json
     }
 }
 EOF
-

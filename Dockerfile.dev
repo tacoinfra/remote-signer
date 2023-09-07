@@ -37,13 +37,13 @@ RUN set -x; \
     flake8  \
     mypy  \
     pytest-cov"; \
-    source /src/env/bin/activate; \
+    source /home/ec2-user/env/bin/activate; \
     pip install ${PYTHON_DEV_DEPS}
 
 # set up SoftHSMv2 token and create /keys.json
 COPY scripts/create_keys_dot_json.sh  /
-RUN set -x;  \
-    source /src/env/bin/activate; \
+RUN set -x;   \
+    source /home/ec2-user/env/bin/activate; \
     /create_keys_dot_json.sh; \
     rm /create_keys_dot_json.sh
 

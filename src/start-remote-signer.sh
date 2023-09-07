@@ -47,13 +47,18 @@ load_password() {
 
 start_remote_signer() {
 	echo "Starting remote signer..."
-	cd /home/ec2-user
-    source /src/env/bin/activate
-	FLASK_APP=signer /src/env/bin/flask run --host=0.0.0.0
+    cd /home/ec2-user
+    source ./env/bin/activate
+    FLASK_APP=signer python -m flask run --host=0.0.0.0
 }
 
 # main
-
 start_hsm_client
-load_password
+if [ -z "$DEBUG" ]
+then
+    echo "DEBUG not detected"
+    load_password
+else
+    echo "DEBUG was detected"
+fi
 start_remote_signer
