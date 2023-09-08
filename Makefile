@@ -75,7 +75,14 @@ bash: up
 # runs off the unpacked zipfile, not a live reload
 run: 
 	@${DC} exec signer bash -c ' \
-		/home/ec2-user/src/start-remote-signer.sh; \
+		cp /code/src/start-remote-signer.sh /home/ec2-user/src/start-remote-signer.sh; \
+		cp /code/signer.py /home/ec2-user/signer.py; \
+		cd /home/ec2-user/; \
+		./src/start-remote-signer.sh &> /home/ec2-user/flask.log; \
+	'
+logrun: 
+	@${DC} exec signer bash -c ' \
+		tail -f /home/ec2-user/flask.log \
 	'
 
 # live reload
@@ -85,7 +92,15 @@ debug: config
 		cd /code; \
 		echo ♉ DYNAMO_DB_URL: $$DYNAMO_DB_URL; \
 		echo ♉ DDB_TABLE: $$DDB_TABLE; \
-		FLASK_APP="signer" /home/ec2-user/env/bin/flask  run --reload --host=0.0.0.0 \
+		gunicorn \
+			--reload \
+			--bind=0.0.0.0:5000 \
+			--workers=1 \
+			--threads=1 \
+			--access-logfile - \
+			--error-logfile - \
+			--capture-output \
+			"signer:app" \
 	'
 
 # GE: older targets for reference

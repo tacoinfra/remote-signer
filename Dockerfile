@@ -1,7 +1,7 @@
 FROM amazonlinux:2023
 
-# update existing packages and install wget
-RUN yum update -y && yum install -y wget
+# update existing packages and install minimum build tools
+RUN yum update -y && yum install -y wget unzip git
 
 # Install and configure CloudHSM CLI
 # https://docs.aws.amazon.com/cloudhsm/latest/userguide/gs_cloudhsm_cli-install.html
@@ -23,10 +23,10 @@ RUN yum update -y && yum install -y python3.11 python3.11-pip
 # py-hsm depends on libhsm
 # https://github.com/bentonstark/libhsm
 RUN set -x; \
-    BUILD_DEPS="git make gcc g++"; \
+    BUILD_DEPS="make gcc g++"; \
     yum install -y ${BUILD_DEPS}; \
     cd /usr/src; \
-    git clone https://github.com/bentonstark/libhsm.git; \
+    git clone https://github.com/tacoinfra/libhsm.git; \
     (cd ./libhsm/build; ./build_libhsm; cp libhsm.so /usr/lib64/libhsm.so); \
     yum remove -y ${BUILD_DEPS}
 
@@ -48,13 +48,14 @@ RUN set -x; \
 COPY remote-signer.zip /home/ec2-user/
 RUN set -x; \
     cd /home/ec2-user; \
-    yum install -y unzip; \
     ZIP="remote-signer.zip"; \
     unzip ${ZIP}; \
     rm ${ZIP}; \
     python3.11 -m venv env; \
     source ./env/bin/activate; \
-    python -m pip install -r ./requirements.txt
+    python -m pip install -r ./requirements.txt; \
+    # unhashable repos;  \
+    pip install git+https://github.com/tacoinfra/py-hsm
 
 # set up entrypoint to run this, requires these shell vars:
 # REGION, HSMID DDB_TABLE, DD_MUTEX_TABLE_NAME

@@ -49,7 +49,14 @@ start_remote_signer() {
 	echo "Starting remote signer..."
     cd /home/ec2-user
     source ./env/bin/activate
-    FLASK_APP=signer python -m flask run --host=0.0.0.0
+    gunicorn \
+        --bind=0.0.0.0:5000 \
+        --workers=1 \
+        --threads=1 \
+        --access-logfile - \
+        --error-logfile - \
+        --capture-output \
+        "signer:app"
 }
 
 # main
