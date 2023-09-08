@@ -17,10 +17,10 @@ RUN	set -x; \
     done; \
     /opt/cloudhsm/bin/configure -a hsm.internal
 
-# update existing packages and install python3.11 alongside system python3
-RUN yum update -y && yum install -y python3.11 python3.11-pip
+# install python3.11 alongside system python3
+RUN yum install -y python3.11 python3.11-pip
 
-# py-hsm depends on libhsm
+# py-hsm depends on libhsm so lets build and install from tacoinfra
 # https://github.com/bentonstark/libhsm
 RUN set -x; \
     BUILD_DEPS="make gcc g++"; \
