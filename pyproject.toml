@@ -53,10 +53,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-flask = "^2.3.3"
 boto3 = "^1.28.40"
 botocore = "^1.31.40"
-py-hsm = "^2.5.0"
+gunicorn = "^21.2.0"
+flask = "^2.3.3"
 
 [build-system]
 requires = ["poetry-core"]
