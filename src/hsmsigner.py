@@ -42,7 +42,7 @@ class HsmSigner(Signer):
                 hashed_data = hashlib.blake2b(
                     hex_to_bytes(sigreq.get_payload()), digest_size=32
                 ).digest()
-                logging.debug(f"Hashed data to sign: {hashed_data}")
+                logging.debug(f"Hashed data to sign: {hashed_data!r}")
                 if "libsofthsm2.so" in self.hsm_libfile:
                     """
                     with softhsm, pkcs11 returns different handles
