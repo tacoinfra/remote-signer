@@ -4,7 +4,7 @@ import logging
 import sys
 from functools import partial
 from os import environ
-from test.test_remote_signer import valid_sig_reqs
+from test.test_remote_signer import INVALID_PREAMBLE, valid_sig_reqs
 from test.utils import get_table, is_docker
 from unittest.mock import patch
 
@@ -91,6 +91,70 @@ class TestIntegration:
                 signature=sig,
                 mechanism=HsmMech.ECDSA,
             )
+
+    def test_error_responses(self, client):
+        """
+        make test TEST=test_error_responses
+        """
+        from IPython import embed
+
+        embed()
+        raw_response = client.post(f"/keys/{KEY}", data='"hi"')
+        assert (
+            raw_response.data
+            == b'{"error": "Invalid signature request: not all hex digits"}'
+        )
+
+        raw_response = client.post(f"/keys/{KEY}", data='"001"')
+        assert (
+            raw_response.data
+            == b'{"error": "non-hexadecimal number found in fromhex() arg at position 3"}'
+        )
+
+        raw_response = client.post(f"/keys/{KEY}", data='""')
+        assert raw_response.data == b'{"error": "index out of range"}'
+
+        raw_response = client.post(f"/keys/{KEY}", data="{1}")
+        assert (
+            raw_response.data
+            == b"<!doctype html>\n<html lang=en>\n<title>400 Bad Request</title>\n<h1>Bad Request</h1>\n<p>The browser (or proxy) sent a request that this server could not understand.</p>\n"
+        )
+
+        raw_response = client.post(f"/keys/{KEY}", data='{"a":2,"b":3}')
+        assert (
+            raw_response.data
+            == b'{"error": "fromhex() argument must be str, not dict"}'
+        )
+
+        raw_response = client.post(f"/keys/{KEY}", data=None)
+        assert (
+            raw_response.data
+            == b"<!doctype html>\n<html lang=en>\n<title>400 Bad Request</title>\n<h1>Bad Request</h1>\n<p>The browser (or proxy) sent a request that this server could not understand.</p>\n"
+        )
+
+    def test_huge_payload(self, client):
+        """
+        make test TEST=test_huge_payload
+
+        def sign(key_hash):
+            #  GE: TODO if required
+            if request.method == "POST":
+                cl = request.content_length
+                if cl is not None and cl > 1024 * 32:
+                    from flask import abort
+                    abort(413)
+
+        """
+        s = "0" * 1024 * 32
+        data = f'"{s}"'
+        raw_response = client.post(f"/keys/{KEY}", data=data)
+        assert raw_response.status_code == 500  # GE: this should be 413
+        raw_response.data == b'{"error": "Request is against policy"}'
+
+    def test_invalid_block_preamble(self, client):
+        data = f'"{INVALID_PREAMBLE}"'
+        raw_response = client.post(f"/keys/{KEY}", data=data)
+        assert raw_response.data == b'{"error": "Request is against policy"}'
 
     def test_post(self, client):
         def get_item(sigreq):

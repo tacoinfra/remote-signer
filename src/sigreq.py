@@ -14,7 +14,7 @@ CHAIN_ID = get_be_int(b"\x00\x57\x52\x00")
 class SignatureReq:
     def __init__(self, hexdata):
         if not all(c in string.hexdigits for c in hexdata):
-            raise ("Invalid signature request: not all hex digits")
+            raise Exception("Invalid signature request: not all hex digits")
 
         self.payload = hexdata
         data = bytes.fromhex(hexdata)
