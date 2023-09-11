@@ -47,3 +47,11 @@ repos:
     -   id: bandit
         args: [-c, pyproject.toml]
         additional_dependencies: [".[toml]"]
+-   repo: local
+    hooks:
+    -   id: ipy
+        name: Check for ipython breakpoints
+        types: [python]
+        language: script
+        pass_filenames: false
+        entry: ./scripts/breakpoints.sh

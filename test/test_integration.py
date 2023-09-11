@@ -96,9 +96,6 @@ class TestIntegration:
         """
         make test TEST=test_error_responses
         """
-        from IPython import embed
-
-        embed()
         raw_response = client.post(f"/keys/{KEY}", data='"hi"')
         assert (
             raw_response.data
