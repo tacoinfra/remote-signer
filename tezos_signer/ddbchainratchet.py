@@ -9,7 +9,7 @@ import uuid
 from werkzeug.exceptions import abort
 from dyndbmutex.dyndbmutex import DynamoDbMutex, AcquireLockFailedError
 
-from src.chainratchet import ChainRatchet
+from tezos_signer import ChainRatchet
 
 logging.getLogger('dyndbmutex').setLevel(logging.CRITICAL)
 

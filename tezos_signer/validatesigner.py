@@ -6,7 +6,7 @@
 
 import logging
 
-from src.sigreq import SignatureReq
+from tezos_signer import SignatureReq
 
 baking_req_types = ["Baking", "Endorsement", "Preendorsement" ]
 voting_req_types = ["Ballot"]
