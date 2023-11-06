@@ -2,10 +2,8 @@
 
 from flask import Flask, request, Response, json, jsonify
 from werkzeug.exceptions import HTTPException
-from src.sigreq import SignatureReq
-from src.validatesigner import ValidateSigner
-from src.ddbchainratchet import DDBChainRatchet
-from src.hsmsigner import HsmSigner
+from tezos_signer import SignatureReq, ValidateSigner, DDBChainRatchet, \
+                         HsmSigner
 from os import path, environ
 import logging
 
