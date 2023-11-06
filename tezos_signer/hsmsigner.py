@@ -11,7 +11,7 @@ from pyhsm.convert import hex_to_bytes
 
 from pyblake2 import blake2b
 
-from src.signer import Signer
+from tezos_signer import Signer
 
 
 class HsmSigner(Signer):

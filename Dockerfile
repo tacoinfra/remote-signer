@@ -26,10 +26,13 @@ RUN	set -e;								\
 									\
 	yum remove -y $BUILD_DEPS;
 
-COPY src/. /src/
+COPY tezos_signer/.	/tezos_signer/
+COPY scripts/.		/scripts/
+COPY setup.py		/
 
-RUN chmod 755 /src/start-remote-signer.sh
+RUN	set -e;								\
+	yum install -y python3-pip;					\
+	pip3 --no-cache install .;					\
+	yum remove -y python3-pip;
 
-COPY signer.py /
-
-ENTRYPOINT ["/src/start-remote-signer.sh"]
+ENTRYPOINT ["/usr/local/bin/start-remote-signer"]

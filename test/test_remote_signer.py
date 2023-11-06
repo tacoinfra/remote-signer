@@ -4,12 +4,12 @@ import secrets
 import struct
 import unittest
 
-from pytezos.crypto.encoding import base58_encode
+from pytezos_core.encoding import base58_encode
 
-from src.sigreq import SignatureReq
-from src.validatesigner import ValidateSigner
-from src.signer import Signer
-from src.chainratchet import MockChainRatchet
+from tezos_signer.sigreq import SignatureReq
+from tezos_signer.validatesigner import ValidateSigner
+from tezos_signer.signer import Signer
+from tezos_signer.chainratchet import MockChainRatchet
 
 
 def eatwhite(str):
