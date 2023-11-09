@@ -3,12 +3,7 @@
 # to implement a constructor and a single method "sign".  They return a
 # base58-encoded signature.
 
-import struct
-
-import bitcoin
-
-# results in p2sig prefix when encoded with base58 (p2sig(98)):
-P256_SIGNATURE = struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]
+from pytezos_core.encoding import base58_encode
 
 
 class Signer:
@@ -17,7 +12,14 @@ class Signer:
 
     @staticmethod
     def b58encode_signature(sig):
-        return bitcoin.bin_to_b58check(sig, magicbyte=P256_SIGNATURE)
+        return base58_encode(sig, prefix=b'p2sig')
 
     def sign(self, handle, sigreq):
         raise(NotImplementedError("Unimplemented virtual method"))
+
+class MockSigner(Signer):
+    def __init__(self, data):
+        self.raw_signed_block = data
+
+    def sign(self, handle=None, sigreq=None):
+        return Signer.b58encode_signature(self.raw_signed_block)

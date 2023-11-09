@@ -1,0 +1,30 @@
+{
+        "signer": "grep11",
+        "url": "grep11.metaco.com:9876",
+        "cert_path": "/data/tezos/remote-signer/grep11client.pem",
+        "key_path": "/data/tezos/remote-signer/grep11client-key.pem",
+        "cacert_path": "/data/tezos/remote-signer/grep11ca.pem" ,
+
+        "keys": {
+                "tz3gvQDEZfYakYEcqaL3ESQGbbNhwVHXAQmd": {
+                        "public_key": "p2pk66EnR4uFKpTmZj9z5Fg9J2J8KmLb7LCwZe5QPySs8JurcTP1PXM",
+                        "secret_key": "000XXXXXXXXXXXXXXXXxx",
+                         "db": "/remote-signer/DB1.db"
+                },
+                "tz2Bjvy8z8ackCt2mQns2LrZ6Yc5BKe4dCpk": {
+                        "public_key": "sppk7bGD91TUq16Fee3Qic3VBZbzQ5hMhqDery4ghd1Gww2aT2cLcYJ",
+                        "secret_key": "0000000000000000000000000XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                        "db": "/remote-signer/DB2.db"
+                },
+                "tz1hjmoX6vQhfboTyTRSaqep4yeGbsb3LN7z": {
+                       "public_key": "edpkvWoG8zRAgfPpQtWhf6VEMifvBsmGriKKRXfmHJv1kBWT6oucKn",
+                       "secret_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                       "db": "/remote-signer/DB3.db"
+                }
+        },
+        "policy": {
+                "baking": 1,
+                "voting": ["aye", "pass"]
+        },
+        "chain_ratchet" : "sqlitedb"
+}

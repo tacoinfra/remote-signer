@@ -33,6 +33,9 @@ class ValidateSigner:
                 raise(Exception(f'Voting "{self.get_vote()}" ' +
                                  'is against policy'))
             allowed = True
+        # allow transfer
+        if sigreq.get_type() in [ "Unknown operation" ]:
+            allowed = True
 
         if not allowed:
             raise(Exception('Request is against policy'))
@@ -48,7 +51,7 @@ class ValidateSigner:
             level = sigreq.get_level()
             round = sigreq.get_round()
 
-            self.ratchet.check(sig_type, level, round)
+            self.ratchet.check(handle,sig_type, level, round)
 
         return self.subsigner.sign(handle, sigreq)
 

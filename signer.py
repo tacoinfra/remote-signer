@@ -2,11 +2,20 @@
 
 from flask import Flask, request, Response, json, jsonify
 from werkzeug.exceptions import HTTPException
+
 from src.sigreq import SignatureReq
-from src.validatesigner import ValidateSigner
+
+from src.chainratchet import MockChainRatchet
 from src.ddbchainratchet import DDBChainRatchet
+from src.sqlitechainratchet import SQLiteChainRatchet
+
+from src.signer import MockSigner
+from src.localsigner import LocalSigner
+from src.hpcsgrep11signer import HPCSGrep11Signer
 from src.hsmsigner import HsmSigner
-from os import path, environ
+from src.validatesigner import ValidateSigner
+
+from os import path
 import logging
 
 def logreq(sigreq, msg):
@@ -15,7 +24,7 @@ def logreq(sigreq, msg):
 
 logging.basicConfig(filename='./remote-signer.log',
                     format='%(asctime)s %(threadName)s %(message)s',
-                    level=logging.INFO)
+                    level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -50,9 +59,32 @@ if path.isfile('keys.json'):
 # We keep the ChainRatchet, HSM, and ValidateSigner outside sign()
 # so that they persist.
 
-cr  = DDBChainRatchet(environ['REGION'], environ['DDB_TABLE'])
-hsm = HsmSigner(config)
-rs  = ValidateSigner(config, ratchet=cr, subsigner=hsm)
+signers = {
+    'local'      : LocalSigner,
+    'grep11'      : HPCSGrep11Signer,
+    'mockery'    : MockSigner,
+    'amazon_hsm' : HsmSigner,
+}
+
+if "signer" not in config:
+    raise(KeyError('config["signer"] not defined'))
+if config["signer"] not in signers:
+    raise(KeyError(f'signer: {config["signer"]} not defined'))
+ss = signers[config["signer"]](config)
+
+ratchets = {
+    'mockery'    : MockChainRatchet,
+    'dynamodb'   : DDBChainRatchet,
+    'sqlitedb'   : SQLiteChainRatchet,
+}
+
+if "chain_ratchet" not in config:
+    raise(KeyError('config["chain_ratchet"] not defined'))
+if config["chain_ratchet"] not in ratchets:
+    raise(KeyError(f'chain_ratchet: {config["chain_ratchet"]} not defined'))
+cr = ratchets[config["chain_ratchet"]](config)
+
+rs  = ValidateSigner(config, ratchet=cr, subsigner=ss)
 
 @app.route('/keys/<key_hash>', methods=['GET', 'POST'])
 def sign(key_hash):
@@ -64,7 +96,7 @@ def sign(key_hash):
             if request.method == 'POST':
                 sigreq = SignatureReq(request.get_json(force=True))
                 response = jsonify({
-                    'signature': rs.sign(key['private_handle'], sigreq)
+                    'signature': rs.sign(key_hash, sigreq)
                 })
             else:
                 response = jsonify({ 'public_key': key['public_key'] })
@@ -101,4 +133,4 @@ def authorized_keys():
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=5001, debug=True)

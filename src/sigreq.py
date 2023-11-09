@@ -1,12 +1,11 @@
 import struct
 import string
 
-import bitcoin
+from pytezos_core.encoding import base58_encode
 
 def get_be_int(bytes):
     return struct.unpack('>L', bytes[0:4])[0]
 
-CHAIN_ID = get_be_int(b'\x00\x57\x52\x00')
 
 class SignatureReq:
 
@@ -18,7 +17,7 @@ class SignatureReq:
         data = bytes.fromhex(hexdata)
 
         self.level = None
-        self.chainid = bitcoin.bin_to_b58check(data[1:5], magicbyte=CHAIN_ID)
+        self.chainid = base58_encode(data[1:5], prefix=b'Net').decode()
 
         if data[0] == 0x01:     # Emmy block
             self.type  = "Baking"
