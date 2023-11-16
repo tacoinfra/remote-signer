@@ -5,6 +5,7 @@
 **/venv
 **/__pycache__
 **/*.pyc
+*.tar.gz
 *.zip
 src/bitcoin
 keys.json
