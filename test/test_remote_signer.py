@@ -18,7 +18,7 @@ def eatwhite(str):
 # results in p2sig prefix when encoded with base58 (p2sig(98)):
 P256_SIG= struct.unpack('>L', b'\x36\xF0\x2C\x34')[0]
 RAW_SIGNED_BLOCK = secrets.token_bytes(64)
-SIGNED_BLOCK = base58_encode(RAW_SIGNED_BLOCK, prefix=b'p2sig')
+SIGNED_BLOCK = base58_encode(RAW_SIGNED_BLOCK, prefix=b'p2sig').decode()
 
 #
 # Here's a quick invalid block that we'll make sure that we don't process:
