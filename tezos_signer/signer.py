@@ -12,7 +12,7 @@ class Signer:
 
     @staticmethod
     def b58encode_signature(sig):
-        return base58_encode(sig, prefix=b'p2sig')
+        return base58_encode(sig, prefix=b'p2sig').decode()
 
     def sign(self, handle, sigreq):
         raise(NotImplementedError("Unimplemented virtual method"))
