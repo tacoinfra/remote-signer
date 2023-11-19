@@ -1,0 +1,157 @@
+#!/bin/sh -e
+
+S3=https://s3.amazonaws.com
+
+aws_login() {
+	TOP=http://169.254.169.254/latest/meta-data/iam/security-credentials/
+
+	ROLE="$(curl -s $TOP)"
+	JSON="$(curl -s "$TOP/$ROLE")"
+
+	export AWS_ACCESS_KEY_ID="$(echo "$JSON"     | jq -r .AccessKeyId)"
+	export AWS_SECRET_ACCESS_KEY="$(echo "$JSON" | jq -r .SecretAccessKey)"
+	export AWS_SESSION_TOKEN="$(echo "$JSON"     | jq -r .Token)"
+}
+
+aws_setup_keys_json() {
+	aws --region=$REGION ssm get-parameters		\
+	    --name /hsm/$HSMID/$STACKNAME/keys		\
+	    --output json --query Parameters[*].Value	\
+	| jq -rc .[0] > /home/ec2-user/keys.json
+
+	chown ec2-user /home/ec2-user/keys.json
+}
+
+aws_get_CA() {
+	> /opt/cloudhsm/etc/customerCA.crt		\
+	aws --region=$REGION ssm get-parameters		\
+	    --name /hsm/${HSMID}/customerCA.crt		\
+	    --with-decryption --output text		\
+	    --query Parameters[*].Value
+}
+
+aws_load_password() {
+	echo "Loading password from SSM..."
+	( umask 077
+	  > /home/ec2-user/hsm_passwd			\
+	  aws --region=$REGION ssm get-parameters	\
+		  --name /hsm/$HSMID/password		\
+		  --with-decryption			\
+		  --output text				\
+		  --query 'Parameters[*].Value'
+
+	  if [ $? -ne 0 ]; then
+		  echo "SSM Error retrieving password"
+		  exit 1
+	  fi
+	)
+	chown ec2-user /home/ec2-user/hsm_passwd
+}
+
+install_cloudhsm_client() {
+	TOP=$S3/cloudhsmv2-software/CloudHsmClient
+	VER=EL7
+	CLIENT=cloudhsm-client-3.1.0-3.el7.x86_64.rpm
+	PKCS11=cloudhsm-client-pkcs11-3.1.0-3.el7.x86_64.rpm
+
+	for i in $CLIENT $PKCS11; do
+		yum install -y "$TOP/$VER/$i"
+	done
+
+	/opt/cloudhsm/bin/configure -a ${HSMADDR}
+
+	systemctl enable cloudhsm-client
+	systemctl start  cloudhsm-client
+}
+
+# XXXrcd: is this necessary?
+install_aws_tools() {
+	S3_EC2=$S3/ec2-downloads-windows
+
+	yum install -y $S3_EC2/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+	yum install -y aws-cfn-bootstrap
+
+	# XXXrcd: is this restart necessary?
+	systemctl restart amazon-ssm-agent
+}
+
+install_systemctl_service() {
+	SERVICE=tacoinfra-signer
+	cat <<-EOM > /usr/lib/systemd/system/$SERVICE.service
+		[Unit]
+		Description=Tacoinfra Signer
+		Documentation=https://github.com/tacoinfra/remote-signer
+		After=network.target
+
+		[Service]
+		User=ec2-user
+		Group=ec2-user
+		WorkingDirectory=/home/ec2-user
+		ExecStart=/home/ec2-user/.local/bin/signer
+		StandardOutput=journal
+		KillMode=process
+		Restart=on-failure
+
+		[Install]
+		WantedBy=multi-user.target
+EOM
+	systemctl enable $SERVICE
+	systemctl start  $SERVICE
+}
+
+report_success() {
+	ARGS="--region $REGION --stack $STACKNAME"
+	echo "Issuing cfn-init"
+
+	/opt/aws/bin/cfn-init -v $ARGS --resource LaunchTemplate
+
+	echo "Issuing cfn-signal"
+
+	/opt/aws/bin/cfn-signal -e $? $ARGS --resource AutoScalingGroup
+}
+
+MISSING=
+require_var() {
+	eval VAR=\"\$$1\"
+
+	if [ -z "$VAR" ]; then
+		MISSING="$MISSING $1"
+	fi
+}
+
+usage() {
+	1>&2 echo "$@"
+	1>&2 echo "usage: $0"
+	exit 1
+}
+
+# make sure that we have the env vars:
+
+for i in HSMID HSMADDR REGION STACKNAME; do
+	require_var $i
+done
+
+if [ -n "$MISSING" ]; then
+	usage "some env vars are missing: $MISSING"
+fi
+
+echo "All required env vars passed in"
+
+umask 022
+set
+
+# install_aws_tools
+install_cloudhsm_client
+
+aws_login
+aws_setup_keys_json
+aws_get_CA
+aws_load_password
+
+install_systemctl_service
+
+yum clean all
+
+report_success
+
+echo "End of user-data installation"

@@ -1,0 +1,43 @@
+#!/bin/sh -e
+
+case "$(</etc/system-release)" in
+	"Amazon Linux release 2023"*)	OS=amzn2023;;
+	"Amazon Linux release 2 "*)	OS=amzn2;;
+	*)				echo "Unrecognised OS version";
+					exit 1;;
+esac
+
+BUILD_DEPS="gcc gcc-c++ git-core swig make libsodium-devel gmp-devel"
+
+#
+# We have different versions of Python on AL2 vs AL2023.  For our
+# requirements.txt, it is convenient to upgrade to python3.8 on AL2
+# and so we do that here:
+
+PIP=pip3
+if [ $OS = amzn2 ]; then
+	amazon-linux-extras install -y python3.8
+	BUILD_DEPS="$BUILD_DEPS python38-devel"
+	PIP=pip3.8
+else
+	BUILD_DEPS="$BUILD_DEPS python3-pip python3-devel"
+fi
+
+yum update -y
+yum install -y	libsodium gmp jq aws-cli $BUILD_DEPS
+
+chown -R ec2-user .
+sudo -H -u ec2-user $PIP --no-cache install wheel .
+
+# XXXrcd:
+#	py-hsm==git+https://github.com/tacoinfra/py-hsm
+
+#
+# This may not be the best place to build libhsm, but this just
+# happens to be where we have the compilers installed...
+
+git clone https://github.com/tacoinfra/libhsm
+( cd libhsm/build && ./build_libhsm && cp libhsm.so /usr/lib64/libhsm.so )
+
+yum remove -y $BUILD_DEPS
+yum clean all
