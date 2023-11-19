@@ -18,7 +18,8 @@ class HsmSigner(Signer):
     def __init__(self, config):
         self.hsm_slot = config['hsm_slot']
         hsm_user = config['hsm_username']
-        hsm_password = environ['HSM_PASSWORD']
+        with open('hsm_passwd', 'r') as file:
+            hsm_password = file.read().rstrip('\n')
         self.hsm_pin = f'{hsm_user}:{hsm_password}'
         self.hsm_libfile = config['hsm_lib']
         self.lock = threading.Lock()
