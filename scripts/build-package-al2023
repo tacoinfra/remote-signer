@@ -39,5 +39,35 @@ sudo -H -u ec2-user $PIP --no-cache install wheel .
 git clone https://github.com/tacoinfra/libhsm
 ( cd libhsm/build && ./build_libhsm && cp libhsm.so /usr/lib64/libhsm.so )
 
+#
+# XXXrcd:
+# The following are hacks to make Amazon Linux 2023 have few files from
+# Amazon Linux 2 to make cloudhsm work as it does not support 2023, yet.
+# This does work on a very simply system where we are running nothing
+# but the remote signer, but it may cause conflicts.  We leave it in
+# place so that testing on AL2023 can continue, but we do not recommend
+# putting it into production until this is resolved in a satisfactory way.
+# Hopefully by Amazon making an AL2023 version of the libraries.  Note
+# that according to:
+#
+# https://docs.aws.amazon.com/cloudhsm/latest/userguide/
+#                                     .../sdk3-support.html
+#                                     .../client-supported-platforms.html
+#                                     .../pkcs11-library-install.html
+#
+# Client SDK 3 and 5 both do not support AL2023 and neither does their
+# PKCS#11 library, so without help from upstream, we are stuck either on
+# AL2 or with a hack similar to this one.  We could improve hack to some
+# degree by installing the libraries in another location and either using
+# LD_LIBRARY_PATH or "objcopy --add-rpath" to reference it.
+
+if [ "$OS" = amzn2023 ]; then
+	tar -C / -Jxvpf binaries/compat-openssl10.tar.xz
+	ln -sf /usr/lib64/libjson-c.so.5 /usr/lib64/libjson-c.so.2
+fi
+
+#
+# And finally, we remove packages that we needed to build:
+
 yum remove -y $BUILD_DEPS
 yum clean all

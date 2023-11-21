@@ -10,7 +10,7 @@ tarball: remote-signer.tar.gz
 
 .PHONY: remote-signer.tar.gz
 remote-signer.tar.gz:
-	tar czf $@ requirements.txt *.py tezos_signer scripts
+	tar czf $@ requirements.txt *.py tezos_signer scripts binaries
 
 zipfile:
 	zip remote-signer.zip requirements.txt *.py tezos_signer/*.py	\
