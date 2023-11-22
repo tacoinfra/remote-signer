@@ -7,6 +7,8 @@ from tezos_signer import SignatureReq, ValidateSigner, DDBChainRatchet, \
 from os import path, environ
 import logging
 
+from pytezos_core.key import Key
+
 def logreq(sigreq, msg):
     if sigreq != None:
         logging.info(f"Request: {sigreq.get_logstr()}:{msg}")
@@ -43,6 +45,35 @@ if path.isfile('keys.json'):
         json_blob = myfile.read().replace('\n', '')
         config = json.loads(json_blob)
         logging.info(f"Loaded config contains: {json.dumps(config, indent=2)}")
+
+    new_keys = {}
+    for k in config["keys"]:
+        try:
+            l = k.split(":")
+            if len(l) == 3:
+                encoded_key = l[0]
+                private_handle = l[1]
+                public_handle = l[2]
+            else:
+                if not isinstance(config['keys'], dict):
+                    raise(Exception(f'Malformed key: "k"'))
+                if not isinstance(config['keys'][k], dict):
+                    raise(Exception(f'Malformed key: {config["keys"][k]}'))
+                encoded_key = k
+                private_handle = config['keys'][k]['private_handle']
+                public_handle = config['keys'][k]['public_handle']
+            key = Key.from_encoded_key(encoded_key)
+            new_keys[key.public_key_hash()] = {
+                "public_key": key.public_key(),
+                "private_handle": private_handle,
+                "public_handle": public_handle
+            }
+        except Exception as e:
+            logging.info(str(e))
+            new_keys[k] = config["keys"][k]
+            pass
+
+    config["keys"] = new_keys
 
 #
 # We keep the ChainRatchet, HSM, and ValidateSigner outside sign()
