@@ -6,12 +6,12 @@
 
 import logging
 
-from tezos_signer import SignatureReq
+from tezos_signer import Signer, SignatureReq
 
 baking_req_types = ["Baking", "Endorsement", "Preendorsement" ]
 voting_req_types = ["Ballot"]
 
-class ValidateSigner:
+class ValidateSigner(Signer):
     def __init__(self, config, ratchet=None, subsigner=None):
         self.keys = config['keys']
         self.ratchet = ratchet
