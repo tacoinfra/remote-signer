@@ -55,18 +55,8 @@ Parameters:
   HSMSlot:
     Type: Number
     Default: 1
-  HSMPubKeyHandle:
-    Type: Number
-    Default: 2
-  HSMPrivKeyHandle:
-    Type: Number
-    Default: 3
-  HSMPubKey:
-    Type: String
-    Default: replace with public key
-  HSMPubKeyHash:
-    Type: String
-    Default: replace with tz3 public key hash
+  HSMKeys:
+    Type: List<String>
   HSMLibFile:
     Type: String
     Default: /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
@@ -103,18 +93,8 @@ Metadata:
         default: The username we will login to the CloudHSM with
       HSMSlot:
         default: 'The slot in the CloudHSM we are using, typically 1'
-      HSMPubKeyHandle:
+      HSMKeys:
         default: The handle of the public key that we will base58 encode
-      HSMPrivKeyHandle:
-        default: The handle of the private key that we will use to sign
-      HSMPubKey:
-        default: >-
-          The base58 encoded public key that matches the public key referenced
-          in PubKeyHandle
-      HSMPubKeyHash:
-        default: >-
-          The base58 encoded public key hash that matches the public key
-          referenced in PubKeyHandle
       HSMLibFile:
         default: Typically /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
     ParameterGroups:
@@ -144,10 +124,7 @@ Metadata:
           - HSMAddress
           - HSMUser
           - HSMSlot
-          - HSMPubKeyHandle
-          - HSMPrivKeyHandle
-          - HSMPubKey
-          - HSMPubKeyHash
+          - HSMKeys
           - HSMLibFile
 Resources:
   SecurityGroup:
@@ -401,26 +378,25 @@ Resources:
       Name: !Sub '/hsm/${HSMID}/${AWS::StackName}/keys'
       Description: 'A JSON containing the public keys, hashes, and slots used'
       Type: String
-      Value: !Sub |
-        {
-          "aws_region": "${AWS::Region}",
-          "bind_addr": "0.0.0.0",
-          "ddb_table": "${DynamoDBTable}",
-          "hsm_username": "${HSMUser}",
-          "hsm_slot": ${HSMSlot},
-          "hsm_lib": "${HSMLibFile}",
-          "keys": {
-            "${HSMPubKeyHash}": {
-              "public_key": "${HSMPubKey}",
-              "private_handle": ${HSMPrivKeyHandle},
-              "public_handle": ${HSMPubKeyHandle}
+      Value:
+        !Sub
+        - |
+          {
+            "aws_region": "${AWS::Region}",
+            "aws_stackname": "${AWS::StackName}",
+            "bind_addr": "0.0.0.0",
+            "chain_ratchet": "dynamodb",
+            "ddb_table": "${DynamoDBTable}",
+            "hsm_username": "${HSMUser}",
+            "hsm_slot": ${HSMSlot},
+            "hsm_lib": "${HSMLibFile}",
+            "keys": [ "${Keys}" ],
+            "policy": {
+              "baking": 1,
+              "voting": [ "pass" ]
             }
-          },
-          "policy": {
-            "baking": 1,
-            "voting": [ "pass" ]
           }
-        }
+        - Keys: !Join ["\", \"", !Ref HSMKeys]
   DynamoDBTable:
     Type: 'AWS::DynamoDB::Table'
     Properties:
