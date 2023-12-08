@@ -7,7 +7,6 @@ import threading
 
 from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmMech
-from pyhsm.convert import hex_to_bytes
 
 from pyblake2 import blake2b
 
