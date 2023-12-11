@@ -48,7 +48,7 @@ class TacoinfraConfig:
         if dict is None and filename is None:
             filename = "keys.json"
 
-        if filename != None:
+        if filename is not None:
             with open("keys.json", "r") as myfile:
                 json_blob = myfile.read().replace("\n", "")
                 conf = json.loads(json_blob)

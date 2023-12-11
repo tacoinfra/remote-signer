@@ -3,7 +3,6 @@
 
 import logging
 import threading
-from os import environ
 
 from pyhsm.hsmclient import HsmClient
 from pyhsm.hsmenums import HsmMech
