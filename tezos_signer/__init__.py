@@ -13,3 +13,7 @@ from .chainratchet import ChainRatchet, MockChainRatchet
 from .ddbchainratchet import DDBChainRatchet
 
 from .config import TacoinfraConfig
+
+__all__ = [ "ChainRatchet", "MockChainRatchet", "TacoinfraConfig",
+            "DDBChainRatchet", "HsmSigner", "LocalSigner", "MockSigner",
+            "Signer", "SignatureReq", "ValidateSigner" ]

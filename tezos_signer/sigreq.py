@@ -71,7 +71,7 @@ class SignatureReq:
             self.type = "Unknown tag"
 
         self.logstr = f"{self.chainid} {self.type}"
-        if self.level != None:
+        if self.level is not None:
             self.logstr += f" at {self.level}/{self.round}"
 
     def get_hex_payload(self):

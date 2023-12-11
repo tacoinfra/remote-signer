@@ -9,7 +9,7 @@ from tezos_signer import SignatureReq, TacoinfraConfig
 
 
 def logreq(sigreq, msg):
-    if sigreq != None:
+    if sigreq is not None:
         logging.info(f"Request: {sigreq.get_logstr()}:{msg}")
 
 logging.basicConfig(filename='./remote-signer.log',
@@ -26,7 +26,7 @@ def sign(key_hash):
     sigreq = None
     try:
         key = config.get_key(key_hash)
-        if key != None:
+        if key is not None:
             if request.method == 'POST':
                 sigreq = SignatureReq(request.get_json(force=True))
                 response = jsonify({
