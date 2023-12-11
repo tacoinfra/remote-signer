@@ -67,4 +67,4 @@ def authorized_keys():
 
 
 if __name__ == '__main__':
-    app.run(host=config.get_addr(), port=config.get_port(), debug=True)
+    app.run(host=config.get_addr(), port=config.get_port())
