@@ -109,11 +109,19 @@ class TestRemoteSigner(unittest.TestCase):
             'voting': ['yay', 'nay', 'pass'],
         }
     })
+    TEST_CONFIG_NO_CONFIG = TacoinfraConfig(conf = {
+        'chain_ratchet': 'mockery',
+        'keys': {},
+        'policy': {
+            'baking': 1,
+            'voting': [],
+        }
+    })
 
     def vote_test(self, req, got):
         self.assertEqual(req[1], got.vote)
 
-        rs = ValidateSigner(self.TEST_CONFIG,
+        rs = ValidateSigner(self.TEST_CONFIG, {'pkh': 'tz3...'},
                             ratchet=MockChainRatchet({}),
                             subsigner=MockSigner(RAW_SIGNED_BLOCK))
         self.assertEqual(rs.sign(SignatureReq(req[-1])), SIGNED_BLOCK)
@@ -122,14 +130,15 @@ class TestRemoteSigner(unittest.TestCase):
         # Now we create a config with a policy that disallows voting:
 
         with self.assertRaises(Exception):
-            rs = ValidateSigner({ 'keys': {}, 'policy': { 'voting': [] } },
+            rs = ValidateSigner(self.TEST_CONFIG_NO_VOTING,
+                                {'pkh': 'tz3...'},
                                 ratchet=MockChainRatchet({}),
                                 subsigner=MockSigner(RAW_SIGNED_BLOCK))
             rs.sign(SignatureReq(req[-1]))
 
     def test_identifies_invalid_block_preamble(self):
         with self.assertRaises(Exception):
-            rs = ValidateSigner(self.TEST_CONFIG,
+            rs = ValidateSigner(self.TEST_CONFIG, {'pkh': 'tz3...'},
                                 ratchet=MockChainRatchet({}, 0, 0),
                                 hsm=MockSigner(RAW_SIGNED_BLOCK))
             rs.sign(SignatureReq(INVALID_PREAMBLE))
@@ -154,14 +163,14 @@ class TestRemoteSigner(unittest.TestCase):
             # valid signature in the MockSigner, but we are mainly
             # testing to ensure that we are denied when we double bake:
 
-            rs = ValidateSigner(self.TEST_CONFIG,
+            rs = ValidateSigner(self.TEST_CONFIG, {'pkh': 'tz3...'},
                                 ratchet=MockChainRatchet({}, level=got.level-1,
                                                          round=0),
                                 subsigner=MockSigner(RAW_SIGNED_BLOCK))
             self.assertEqual(rs.sign(SignatureReq(req[4])), SIGNED_BLOCK)
 
             if got.round > 0:
-                rs = ValidateSigner(self.TEST_CONFIG,
+                rs = ValidateSigner(self.TEST_CONFIG, {'pkh': 'tz3...'},
                                     ratchet=MockChainRatchet({},
                                                              level=got.level,
                                                              round=got.round-1),
@@ -172,7 +181,7 @@ class TestRemoteSigner(unittest.TestCase):
             # And now, for a failure:
 
             with self.assertRaises(Exception):
-                    rs = ValidateSigner(self.TEST_CONFIG,
+                    rs = ValidateSigner(self.TEST_CONFIG, {'pkh': 'tz3...'},
                                         ratchet=MockChainRatchet({}, got.level,
                                                                  got.round),
                                         subsigner=MockSigner(RAW_SIGNED_BLOCK))
