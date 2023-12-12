@@ -44,6 +44,7 @@ class ValidateSigner(Signer):
 
         if sigreq.get_type() in baking_req_types:
             sig_type = f"{sigreq.get_type()}_{sigreq.get_chainid()}"
+            sig_type += f"_{self.key['pkh']}"
             level = sigreq.get_level()
             round = sigreq.get_round()
 
