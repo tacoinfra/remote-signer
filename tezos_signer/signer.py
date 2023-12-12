@@ -14,7 +14,7 @@ class Signer:
     def b58encode_signature(sig):
         return base58_encode(sig, prefix=b'p2sig').decode()
 
-    def sign(self, handle, sigreq):
+    def sign(self, sigreq):
         raise(NotImplementedError("Unimplemented virtual method"))
 
 class MockSigner(Signer):

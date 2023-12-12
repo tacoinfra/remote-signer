@@ -12,11 +12,11 @@ baking_req_types = ["Baking", "Endorsement", "Preendorsement" ]
 voting_req_types = ["Ballot"]
 
 class ValidateSigner(Signer):
-    def __init__(self, config, ratchet=None, subsigner=None):
-        self.keys = config['keys']
+    def __init__(self, config, key, ratchet=None, subsigner=None):
         self.ratchet = ratchet
         self.subsigner = subsigner
-        self.policy = config['policy']
+        self.policy = config.get_policy()
+        self.key = key
 
     def check_policy(self, sigreq):
         allowed = False
@@ -37,9 +37,8 @@ class ValidateSigner(Signer):
         if not allowed:
             raise(Exception('Request is against policy'))
 
-    def sign(self, handle, sigreq):
-        logging.debug(f"About to sign {sigreq.get_hex_payload()} " +
-                      f"with key handle {handle}")
+    def sign(self, sigreq):
+        logging.debug(f"About to sign {sigreq.get_hex_payload()}")
 
         self.check_policy(sigreq)
 
@@ -50,5 +49,4 @@ class ValidateSigner(Signer):
 
             self.ratchet.check(sig_type, level, round)
 
-        return self.subsigner.sign(handle, sigreq)
-
+        return self.subsigner.sign(sigreq)

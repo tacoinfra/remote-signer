@@ -2,10 +2,10 @@
 
 from flask import Flask, request, Response, json, jsonify
 from werkzeug.exceptions import HTTPException
-from tezos_signer import SignatureReq, ValidateSigner, DDBChainRatchet, \
-                         HsmSigner
-from os import path, environ
+from tezos_signer import SignatureReq, TacoinfraConfig
+
 import logging
+
 
 def logreq(sigreq, msg):
     if sigreq != None:
@@ -17,52 +17,19 @@ logging.basicConfig(filename='./remote-signer.log',
 
 app = Flask(__name__)
 
-#
-# The config file (keys.json) has a structure:
-#
-# config = {
-#     'hsm_username': 'resigner',
-#     'hsm_slot': 1,
-#     'hsm_lib': '/opt/cloudhsm/lib/libcloudhsm_pkcs11.so',
-#     'keys': {
-#         'tz3aTaJ3d7Rh4yXpereo4yBm21xrs4bnzQvW': {
-#             'public_key':
-#                 'p2pk67jx4rEadFpbHdiPhsKxZ4KCoczLWqsEpNarWZ7WQ1SqKMf7JsS',
-#             'private_handle': 7,
-#             'public_handle': 9
-#         }
-#     },
-#     'policy': {
-#         'baking': 1,		# just a boolean
-#         'voting': ['pass'],	# a list of permitted votes
-#     }
-# }
-
-if path.isfile('keys.json'):
-    with open('keys.json', 'r') as myfile:
-        json_blob = myfile.read().replace('\n', '')
-        config = json.loads(json_blob)
-        logging.info(f"Loaded config contains: {json.dumps(config, indent=2)}")
-
-#
-# We keep the ChainRatchet, HSM, and ValidateSigner outside sign()
-# so that they persist.
-
-cr  = DDBChainRatchet(config)
-hsm = HsmSigner(config)
-rs  = ValidateSigner(config, ratchet=cr, subsigner=hsm)
+config = TacoinfraConfig('keys.json')
 
 @app.route('/keys/<key_hash>', methods=['GET', 'POST'])
 def sign(key_hash):
     response = None
     sigreq = None
     try:
-        if key_hash in config['keys']:
-            key = config['keys'][key_hash]
+        key = config.get_key(key_hash)
+        if key != None:
             if request.method == 'POST':
                 sigreq = SignatureReq(request.get_json(force=True))
                 response = jsonify({
-                    'signature': rs.sign(key['private_handle'], sigreq)
+                    'signature': key['signer'].sign(sigreq)
                 })
             else:
                 response = jsonify({ 'public_key': key['public_key'] })
@@ -98,7 +65,5 @@ def authorized_keys():
     )
 
 
-addr = config.get('bind_addr', '127.0.0.1')
-port = config.get('bind_port', '5000')
 if __name__ == '__main__':
-    app.run(host=addr, port=port, debug=True)
+    app.run(host=config.get_addr(), port=config.get_port(), debug=True)
