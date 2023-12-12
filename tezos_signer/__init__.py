@@ -7,3 +7,5 @@ from .validatesigner import ValidateSigner
 
 from .chainratchet import ChainRatchet, MockChainRatchet
 from .ddbchainratchet import DDBChainRatchet
+
+from .config import TacoinfraConfig

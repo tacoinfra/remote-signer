@@ -26,9 +26,9 @@ class DecimalEncoder(json.JSONEncoder):
 class DDBChainRatchet(ChainRatchet):
 
     def __init__(self, config):
-        self.REGION = config['aws_region']
+        self.REGION = config.get_aws_region()
         self.dynamodb = boto3.resource('dynamodb', region_name=self.REGION)
-        self.table = self.dynamodb.Table(config['ddb_table'])
+        self.table = self.dynamodb.Table(config.get_ddb_table())
 
     def CreateItem(self, keyname, key, level, round):
         try:
