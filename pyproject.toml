@@ -1,0 +1,42 @@
+[tool.vulture]
+min_confidence = 80
+paths = ["tezos_signer"]
+sort_by_size = true
+ignore_names = ["schema_editor", "model_admin"]
+
+[tool.ruff]
+line-length = 79
+ignore = ["E722", "E741", "F541"]
+
+# We use 79 char line length so that it is 80 when we `git diff`
+# E722 do not use bare 'except'
+# E741 Ambiguous variable name
+# F541 f-string without any placeholders
+
+[tool.isort]
+multi_line_output = 11
+
+[tool.bandit]
+exclude_dirs = [
+    # "test", 
+]
+skips = ["B101"]
+# tests = ["B201", "B301"]
+
+[tool.mypy]
+python_version = "3.11"
+follow_imports = "silent"
+# files = [
+#     # "kleanse/management/commands/kleanse.py",
+# ]
+
+# https://mypy.readthedocs.io/en/stable/config_file.html
+exclude = [
+    # "main/tests/test.py",
+]
+
+ignore_missing_imports = true
+disable_error_code = "misc"
+
+# [tool.django-stubs]
+# django_settings_module = "docker.conf.settings"
