@@ -6,7 +6,7 @@
 
 import logging
 
-from tezos_signer import Signer, SignatureReq
+from tezos_signer import SignatureReq, Signer
 
 baking_req_types = ["Baking", "Endorsement", "Preendorsement" ]
 voting_req_types = ["Ballot"]

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from flask import Flask, request, Response, json, jsonify
-from werkzeug.exceptions import HTTPException
-from tezos_signer import SignatureReq, TacoinfraConfig
-
 import logging
+
+from flask import Flask, Response, json, jsonify, request
+from werkzeug.exceptions import HTTPException
+
+from tezos_signer import SignatureReq, TacoinfraConfig
 
 
 def logreq(sigreq, msg):
