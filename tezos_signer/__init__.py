@@ -1,3 +1,7 @@
+# We skip isorting this file as the order is important.
+#
+# isort: skip_file
+
 from .sigreq import SignatureReq
 
 from .signer import Signer, MockSigner

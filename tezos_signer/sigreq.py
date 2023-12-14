@@ -1,8 +1,9 @@
-import struct
 import string
+import struct
 
 from pytezos_core.encoding import base58_encode
 from pytezos_core.key import blake2b
+
 
 def get_be_int(bytes):
     return struct.unpack('>L', bytes[0:4])[0]
