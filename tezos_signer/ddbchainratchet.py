@@ -1,10 +1,10 @@
 
+import os
 import json
 import boto3
 import decimal
 from botocore.exceptions import ClientError
 import logging
-import uuid
 
 from werkzeug.exceptions import abort
 from dyndbmutex.dyndbmutex import DynamoDbMutex, AcquireLockFailedError
@@ -105,7 +105,7 @@ class DDBChainRatchet(ChainRatchet):
         # This code acquires a mutex lock using:
         #      https://github.com/chiradeep/dyndb-mutex
         # generate a unique name for this process/thread
-        my_name = str(uuid.uuid4()).split("-")[0]
+        my_name = os.urandom(8).hex()
         m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000,
                           region_name=self.REGION)
         try:
