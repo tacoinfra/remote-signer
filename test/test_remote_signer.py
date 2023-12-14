@@ -6,11 +6,11 @@ import unittest
 
 from pytezos_core.encoding import base58_encode
 
+from tezos_signer.chainratchet import MockChainRatchet
 from tezos_signer.config import TacoinfraConfig
+from tezos_signer.signer import MockSigner
 from tezos_signer.sigreq import SignatureReq
 from tezos_signer.validatesigner import ValidateSigner
-from tezos_signer.signer import MockSigner
-from tezos_signer.chainratchet import MockChainRatchet
 
 
 def eatwhite(str):

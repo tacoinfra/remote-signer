@@ -1,13 +1,13 @@
 
-import os
-import json
-import boto3
 import decimal
-from botocore.exceptions import ClientError
+import json
 import logging
+import os
 
+import boto3
+from botocore.exceptions import ClientError
+from dyndbmutex.dyndbmutex import AcquireLockFailedError, DynamoDbMutex
 from werkzeug.exceptions import abort
-from dyndbmutex.dyndbmutex import DynamoDbMutex, AcquireLockFailedError
 
 from tezos_signer import ChainRatchet
 
