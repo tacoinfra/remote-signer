@@ -42,22 +42,35 @@ class SignatureReq:
             self.chainid = None
             self.type = "Unknown operation"
             self.blockhash = parse_bytes(data, 28)    # The block hash
-            otag = parse_bytes(data, 1)
-            if otag == 0x06:                          # 0x06 is a ballot
-                self.pkh_type = parse_bytes(data, 1)  # Public Key Hash type
-                self.pkh = parse_bytes(data, 20)      # Public Key Hash
-                self.period = parse_bytes(data, 4)
-                self.proposal = parse_bytes(data, 32)
-                vote = parse_bytes(data, 1)
-                if vote == 0x00:
-                    self.type = "Ballot"
-                    self.vote = 'yay'
-                elif vote == 0x01:
-                    self.type = "Ballot"
-                    self.vote = 'nay'
-                elif vote == 0x02:
-                    self.type = "Ballot"
-                    self.vote = 'pass'
+            errs = []
+            while len(data) > 0:
+                # The entire operation must be consumed so that the
+                # next byte will be the next operation tag.  Also, for
+                # now, we stop after the first operation as we would need
+                # to update the framework to deal with multiple operations.
+                # We leave the loop in to suggest this later extension.
+                otag = parse_bytes(data, 1)
+                if self.type != "Unknown operation":
+                    self.type = "Multiple operations not supported"
+                elif otag == 0x06:                        # 0x06 is a ballot
+                    self.pkh_type = parse_bytes(data, 1)
+                    self.pkh = parse_bytes(data, 20)
+                    self.period = parse_bytes(data, 4)
+                    self.proposal = parse_bytes(data, 32)
+                    vote = parse_bytes(data, 1)
+                    if vote == 0x00:
+                        self.type = "Ballot"
+                        self.vote = 'yay'
+                    elif vote == 0x01:
+                        self.type = "Ballot"
+                        self.vote = 'nay'
+                    elif vote == 0x02:
+                        self.type = "Ballot"
+                        self.vote = 'pass'
+                else:
+                    errs.append(f"{otag}")
+            if len(errs) > 0:
+                self.type = "Unknown operation tags: {", ".join(errs)}"
 
         elif tag == 0x11:   # Tenderbake block
             self.type  = "Baking"
