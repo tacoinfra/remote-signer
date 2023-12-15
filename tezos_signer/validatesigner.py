@@ -34,6 +34,9 @@ class ValidateSigner(Signer):
                                  'is against policy'))
             allowed = True
 
+        if 'allow_all' in self.policy and self.policy['allow_all']:
+            allowed = True
+
         if not allowed:
             raise(Exception('Request is against policy'))
 
