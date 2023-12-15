@@ -21,17 +21,7 @@ class SignatureReq:
         self.level   = None
         self.chainid = base58_encode(data[1:5], prefix=b'Net').decode()
 
-        if data[0] == 0x01:     # Emmy block
-            self.type  = "Baking"
-            self.level = get_be_int(data[5:])
-            self.round = 0
-
-        elif data[0] == 0x02:   # Emmy endorsement
-            self.type  = "Endorsement"
-            self.level = get_be_int(data[-4:])
-            self.round = 0
-
-        elif data[0] == 0x03:   # Operation, for now, we only do ballots
+        if data[0] == 0x03:   # Operation, for now, we only do ballots
             self.chainid = None
             self.type = "Unknown operation"
             self.blockhash = data[1:32]         # The block hash
