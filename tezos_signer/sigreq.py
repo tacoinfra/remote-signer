@@ -8,6 +8,22 @@ from pytezos_core.key import blake2b
 def get_be_int(bytes):
     return struct.unpack('>L', bytes[0:4])[0]
 
+def drop_bytes(b, n):
+    del(b[:n])
+
+def parse_bytes(b, n):
+    ret = b[:n]
+    drop_bytes(b, n)
+    if n == 1:
+        ret = ord(ret)
+    return ret
+
+def parse_be_int(b):
+    return get_be_int(parse_bytes(b, 4))
+
+def parse_chain_id(b):
+    return base58_encode(parse_bytes(b, 4), prefix=b'Net').decode()
+
 class SignatureReq:
 
     def __init__(self, hexdata):
@@ -15,50 +31,56 @@ class SignatureReq:
             raise('Invalid signature request: not all hex digits')
 
         self.hex_payload = hexdata
-        data = bytes.fromhex(hexdata)
+        self.payload = bytes.fromhex(hexdata)
 
-        self.payload = data
+        data = bytearray(self.payload)
         self.level   = None
-        self.chainid = base58_encode(data[1:5], prefix=b'Net').decode()
+        tag = parse_bytes(data, 1)
+        self.chainid = parse_chain_id(data)
 
-        if data[0] == 0x03:   # Operation, for now, we only do ballots
+        if tag == 0x03:   # Operation, for now, we only do ballots
             self.chainid = None
             self.type = "Unknown operation"
-            self.blockhash = data[1:32]         # The block hash
-            if data[33] == 0x06:                # 0x06 is a ballot
-                self.pkh_type = data[34]        # Public Key Hash type
-                self.pkh = data[35:55]          # Public Key Hash
-                self.period = data[55:59]
-                self.proposal = data[59:91]
-                if data[91] == 0x00:
+            self.blockhash = parse_bytes(data, 28)    # The block hash
+            otag = parse_bytes(data, 1)
+            if otag == 0x06:                          # 0x06 is a ballot
+                self.pkh_type = parse_bytes(data, 1)  # Public Key Hash type
+                self.pkh = parse_bytes(data, 20)      # Public Key Hash
+                self.period = parse_bytes(data, 4)
+                self.proposal = parse_bytes(data, 32)
+                vote = parse_bytes(data, 1)
+                if vote == 0x00:
                     self.type = "Ballot"
                     self.vote = 'yay'
-                elif data[91] == 0x01:
+                elif vote == 0x01:
                     self.type = "Ballot"
                     self.vote = 'nay'
-                elif data[91] == 0x02:
+                elif vote == 0x02:
                     self.type = "Ballot"
                     self.vote = 'pass'
 
-        elif data[0] == 0x11:   # Tenderbake block
+        elif tag == 0x11:   # Tenderbake block
             self.type  = "Baking"
-            self.level = get_be_int(data[5:])
-            fitness_sz = get_be_int(data[83:])
-            offset = 87 + fitness_sz - 4
-            self.round = get_be_int(data[offset:])
+            self.level = parse_be_int(data)
+            drop_bytes(data, 74)
+            fitness_sz = parse_be_int(data)
+            drop_bytes(data, fitness_sz - 4)
+            self.round = parse_be_int(data)
 
-        elif data[0] == 0x12:   # Tenderbake preendorsement
+        elif tag == 0x12:   # Tenderbake preendorsement
             self.type  = "Preendorsement"
-            self.level = get_be_int(data[40:])
-            self.round = get_be_int(data[44:])
+            drop_bytes(data, 35)
+            self.level = parse_be_int(data)
+            self.round = parse_be_int(data)
 
-        elif data[0] == 0x13:   # Tenderbake endorsement
+        elif tag == 0x13:   # Tenderbake endorsement
             self.type  = "Endorsement"
-            self.level = get_be_int(data[40:])
-            self.round = get_be_int(data[44:])
+            drop_bytes(data, 35)
+            self.level = parse_be_int(data)
+            self.round = parse_be_int(data)
 
         else:
-            self.type = "Unknown tag"
+            self.type = f"Unknown tag: {tag}"
 
         self.logstr = f"{self.chainid} {self.type}"
         if self.level is not None:
