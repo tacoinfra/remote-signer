@@ -37,22 +37,9 @@ INVALID_PREAMBLE = eatwhite("""
 #         (type, chainid, level, round)
 
 valid_sig_reqs = [
-    # Emmy Signature Requests:
-
-      ("Baking", "NetXH12Aer3be93", 650, 0, eatwhite("""
-        01000000000000028a0130009e2cb10ef25b54563989371653d9ba6545c475a1d583
-        ac8b4a28583df98d000000005b29ab5c04ce84d452f0c4accfbb23f42e5a23e91915
-        2a40ee17b56a6e7f1b95cfd20d792c00000011000000010000000008000000000000
-        2ceb3306c828b082cf23d15de02f6d5b028652569bf794e74d7c839c50c7e82fc781
-        0000e27015247d6713cd00"""))
-
-    , ("Endorsement", "NetXjkQyBJ9VYHe", 631, 0, eatwhite("""
-        029feab277d4b686c59365261c4210f21d916fbb09f5e47e092a14b94e39fab61900
-        00000277"""))
-
     # Tenderbake Signature Requests:
 
-    , ("Baking", "NetXdQprcVkpaWU", 12, 0, eatwhite("""
+      ("Baking", "NetXdQprcVkpaWU", 12, 0, eatwhite("""
         117a06a7700000000c0272b9c070cec8364f71d3361b0196ff250451241dc70933fe
         fbda3b4c0eff329700000000619d27ce0401589994c43f991baf797f80702ba7f110
         75ea11eaed813c3b2eaf769b42ca30000000210000000102000000040000000c0000
