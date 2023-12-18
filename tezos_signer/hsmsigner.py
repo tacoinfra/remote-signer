@@ -4,8 +4,8 @@
 import logging
 import threading
 
-from pyhsm.hsmclient import HsmClient
-from pyhsm.hsmenums import HsmMech
+from PyKCS11 import CK_OBJECT_HANDLE, CKF_RW_SESSION, CKF_SERIAL_SESSION, \
+                    CKM_ECDSA, Mechanism, PyKCS11Lib
 
 from tezos_signer import Signer
 
@@ -22,20 +22,30 @@ class HsmSigner(Signer):
         self.key = key
         self.lock = threading.Lock()
 
+        pkcs11 = PyKCS11Lib()
+        pkcs11.load(self.hsm_libfile)
+        self.session = pkcs11.openSession(self.hsm_slot,
+                                          CKF_SERIAL_SESSION|CKF_RW_SESSION)
+        self.session.login(self.hsm_pin)
+        self.key = CK_OBJECT_HANDLE(self.session)
+        self.key.assign(self.hsm_private_handle)
+
     def sign(self, sigreq):
         logging.debug(f'Signing with HSM client:')
         logging.debug(f'    Slot = {self.hsm_slot}')
         logging.debug(f'    lib = {self.hsm_libfile}')
         logging.debug(f'    private_handle = {self.hsm_private_handle}')
+        #
+        # XXXrcd: we continue to use a lock because it was necessary
+        #         when we were using py-hsm.  We are not sure we needed
+        #         it due to bugs in py-hsm or the underlying PKCS#11
+        #         library.  Although we strongly suspect the former, we
+        #         have not had time to test our hypothesis.
         with self.lock:
-            with HsmClient(slot=self.hsm_slot, pin=self.hsm_pin,
-                           pkcs11_lib=self.hsm_libfile) as c:
-                hashed_data = sigreq.get_hashed_payload()
-                logging.debug(f'Hashed data to sign: {hashed_data}')
-                sig = c.sign(handle=self.hsm_private_handle, data=hashed_data,
-                             mechanism=HsmMech.ECDSA)
-
-        logging.debug(f'Raw signature: {sig}')
-        encoded_sig = Signer.b58encode_signature(sig)
-        logging.debug(f'Base58-encoded signature: {encoded_sig}')
-        return encoded_sig
+            sig = self.session.sign(self.key, sigreq.get_hashed_payload(),
+                                    Mechanism(CKM_ECDSA, None))
+            sig = bytes(sig)
+            logging.debug(f'Raw signature: {sig}')
+            encoded_sig = Signer.b58encode_signature(sig)
+            logging.debug(f'Base58-encoded signature: {encoded_sig}')
+            return encoded_sig

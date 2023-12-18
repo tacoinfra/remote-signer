@@ -15,13 +15,6 @@ Parameters:
     AllowedValues:
       - remote-signer-dev.tar.gz
       - remote-signer.tar.gz
-  LibHSM:
-    Type: String
-    Default: libhsm-1.0.zip
-    AllowedValues:
-      - libhsm-1.0.zip
-      - libhsm-2.0.zip
-      - libhsm.zip
   VPC:
     Type: 'AWS::EC2::VPC::Id'
   Subnets:
@@ -67,8 +60,6 @@ Metadata:
         default: The S3 bucket that contains the remote signer artifacts
       Artifact:
         default: The zip file within the S3 artifact bucket that is the artifact
-      LibHSM:
-        default: The zip file within the S3 artifact bucket that is the HSM library
       VPC:
         default: Choose which VPC the autoscaling group should be deployed to
       Subnets:
@@ -103,7 +94,6 @@ Metadata:
         Parameters:
           - ArtifactBucket
           - Artifact
-          - LibHSM
       - Label:
           default: VPC Configuration
         Parameters:
