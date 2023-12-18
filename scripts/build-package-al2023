@@ -29,16 +29,6 @@ yum install -y	libsodium gmp jq aws-cli $BUILD_DEPS
 chown -R ec2-user .
 sudo -H -u ec2-user $PIP --no-cache install wheel .
 
-# XXXrcd:
-#	py-hsm==git+https://github.com/tacoinfra/py-hsm
-
-#
-# This may not be the best place to build libhsm, but this just
-# happens to be where we have the compilers installed...
-
-git clone https://github.com/tacoinfra/libhsm
-( cd libhsm/build && ./build_libhsm && cp libhsm.so /usr/lib64/libhsm.so )
-
 #
 # XXXrcd:
 # The following are hacks to make Amazon Linux 2023 have few files from
