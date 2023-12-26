@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import time
 
 from flask import Flask, Response, json, jsonify, request
 from werkzeug.exceptions import HTTPException
@@ -8,7 +9,8 @@ from werkzeug.exceptions import HTTPException
 from tezos_signer import SignatureReq, TacoinfraConfig
 
 
-def logreq(sigreq, msg):
+def logreq(sigreq, start, msg):
+    logging.info(f"Request took {round(time.time() - start, 6)} seconds")
     if sigreq is not None:
         logging.info(f"Request: {sigreq.get_logstr()}:{msg}")
 
@@ -25,6 +27,7 @@ config = TacoinfraConfig('keys.json')
 def sign(key_hash):
     response = None
     sigreq = None
+    start = time.time()
     try:
         key = config.get_key(key_hash)
         if key is not None:
@@ -40,7 +43,7 @@ def sign(key_hash):
             response = Response('Key not found', status=404)
     except HTTPException as e:
         logging.error(e)
-        logreq(sigreq, "Failed")
+        logreq(sigreq, start, "Failed")
         raise
     except Exception as e:
         data = {'error': str(e)}
@@ -50,10 +53,10 @@ def sign(key_hash):
             status=500,
             mimetype='application/json'
         )
-        logreq(sigreq, "Failed")
+        logreq(sigreq, start, "Failed")
         return response
 
-    logreq(sigreq, "Success")
+    logreq(sigreq, start, "Success")
 
     return response
 
