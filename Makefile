@@ -18,6 +18,8 @@ SRCS=	setup.py			\
 
 ARCHFILES= $(SRCS) requirements.txt binaries/compat-openssl10.tar.xz
 
+.PHONY: all check docker tarball zipfile
+
 all: check zipfile
 
 docker: tarball
