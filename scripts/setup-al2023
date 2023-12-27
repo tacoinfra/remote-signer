@@ -48,16 +48,7 @@ aws_load_password() {
 	chown ec2-user /home/ec2-user/hsm_passwd
 }
 
-install_cloudhsm_client() {
-	TOP=$S3/cloudhsmv2-software/CloudHsmClient
-	VER=EL7
-	CLIENT=cloudhsm-client-3.1.0-3.el7.x86_64.rpm
-	PKCS11=cloudhsm-client-pkcs11-3.1.0-3.el7.x86_64.rpm
-
-	for i in $CLIENT $PKCS11; do
-		yum install -y "$TOP/$VER/$i"
-	done
-
+configure_cloudhsm_client() {
 	/opt/cloudhsm/bin/configure -a ${HSMADDR}
 
 	systemctl enable cloudhsm-client
@@ -141,7 +132,7 @@ umask 022
 set
 
 # install_aws_tools
-install_cloudhsm_client
+configure_cloudhsm_client
 
 aws_login
 aws_setup_keys_json

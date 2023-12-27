@@ -24,7 +24,18 @@ else
 fi
 
 yum update -y
-yum install -y	libsodium gmp jq aws-cli $BUILD_DEPS
+yum install -y	libsodium gmp jq aws-cli sudo xz $BUILD_DEPS
+
+S3=https://s3.amazonaws.com
+TOP=$S3/cloudhsmv2-software/CloudHsmClient
+VER=EL7
+CLIENT=cloudhsm-client-3.4.4-1.el7.x86_64.rpm
+PKCS11=cloudhsm-client-pkcs11-3.4.4-1.el7.x86_64.rpm
+
+for i in $CLIENT $PKCS11; do
+	yum install -y "$TOP/$VER/$i"
+done
+
 
 chown -R ec2-user .
 sudo -H -u ec2-user $PIP --no-cache install wheel .
