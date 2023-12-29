@@ -4,8 +4,8 @@
 import logging
 import threading
 
-from PyKCS11 import CK_OBJECT_HANDLE, CKF_RW_SESSION, CKF_SERIAL_SESSION, \
-                    CKM_ECDSA, Mechanism, PyKCS11Lib
+from PyKCS11 import CKA_CLASS, CKA_LABEL, CKM_ECDSA, CKO_PRIVATE_KEY, \
+                    Mechanism, PyKCS11Lib
 
 from tezos_signer import Signer
 
@@ -19,6 +19,18 @@ from tezos_signer import Signer
 
 session = None
 
+def find_key(session, handle, filter=False):
+    tmpl = [(CKA_CLASS, CKO_PRIVATE_KEY)]
+    if filter:
+        tmpl.append((CKA_LABEL, handle))
+    objs = session.findObjects(tmpl)
+    for o in objs:
+        labels = session.getAttributeValue(o, [CKA_LABEL])
+        labels.append(str(o.value()))
+        if handle in labels:
+            return o
+    return None
+
 class HsmSigner(Signer):
     def __init__(self, config, key):
         hsm_user = config.get_hsm_username()
@@ -26,7 +38,7 @@ class HsmSigner(Signer):
             hsm_password = file.read().rstrip('\n')
         self.hsm_pin = f'{hsm_user}:{hsm_password}'
         self.hsm_libfile = config.get_hsm_lib()
-        self.hsm_private_handle = int(key['signer_args'][0])
+        self.hsm_private_handle = key['signer_args'][0]
         self.hsm_slot = config.get_hsm_slot()
         self.key = key
         self.lock = threading.Lock()
@@ -35,13 +47,16 @@ class HsmSigner(Signer):
         if session is None:
             pkcs11 = PyKCS11Lib()
             pkcs11.load(self.hsm_libfile)
-            session = pkcs11.openSession(self.hsm_slot,
-                                         CKF_SERIAL_SESSION|CKF_RW_SESSION)
+            session = pkcs11.openSession(self.hsm_slot)
             session.login(self.hsm_pin)
         self.session = session
 
-        self.key = CK_OBJECT_HANDLE(self.session)
-        self.key.assign(self.hsm_private_handle)
+        self.key = find_key(self.session, self.hsm_private_handle, True)
+        if self.key is None:
+            self.key = find_key(self.session, self.hsm_private_handle)
+
+        if self.key is None:
+            raise(KeyError(f"Can't find key for {key['pkh']}"))
 
     def sign(self, sigreq):
         logging.debug(f'Signing with HSM client:')
