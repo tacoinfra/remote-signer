@@ -130,4 +130,4 @@ def run_two_key_test(config, pkh1, pkh2):
             else:
                 sig = k['signer'].sign(sigreq)
                 key = Key.from_encoded_key(k["public_key"])
-                # XXXrcd: validate signature!!!
+                key.verify(sig, sigreq.get_payload())
