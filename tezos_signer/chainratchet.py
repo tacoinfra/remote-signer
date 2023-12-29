@@ -32,11 +32,18 @@ class ChainRatchet:
 class MockChainRatchet(ChainRatchet):
 
     def __init__(self, config, level=0, round=0):
+        self.db = {}
         self.lastlevel = level
         self.lastround = round
 
     def check(self, sig_type, level=0, round=0):
+        d = self.db.get(sig_type)
+        if d is not None:
+            self.lastlevel = d['level']
+            self.lastround = d['round']
+        elif len(self.db) > 0:
+            self.lastlevel = 0
+            self.lastround = 0
         super().check(sig_type, level, round)
-        self.lastlevel = level
-        self.lastround = round
+        self.db.update({sig_type: {"level": level, "round": round}})
         return True
