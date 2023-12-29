@@ -39,7 +39,6 @@ class SignatureReq:
         self.chainid = parse_chain_id(data)
 
         if tag == 0x03:   # Operation, for now, we only do ballots
-            self.chainid = None
             self.type = "Unknown operation"
             self.blockhash = parse_bytes(data, 28)    # The block hash
             errs = []
