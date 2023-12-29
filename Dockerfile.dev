@@ -2,9 +2,10 @@ FROM remote-signer:latest
 
 USER root
 RUN	set -e;							\
-	yum -y install	gcc-c++ make automake autoconf libtool	\
-			pkg-config openssl-devel gnutls-utils	\
-			git-core python3-pip python3-devel;	\
+	yum -y install	git-core python3-pip python3-devel	\
+			gnutls-utils softhsm;			\
+								\
+	chown -R ec2-user /var/lib/softhsm;			\
 								\
 	pip3 install	pytest-cov;				\
 								\
@@ -16,13 +17,7 @@ RUN	set -e;							\
 	URL="${URL}@a39d06f06b5602d6fea98eea39247f337526c25c";	\
 	URL="${URL}#egg=dyndbmutex";				\
 								\
-	pip3 install -e $URL;					\
-								\
-	git clone https://github.com/opendnssec/SoftHSMv2;	\
-	cd SoftHSMv2;						\
-	sh autogen.sh;						\
-	./configure;						\
-	make all install;
+	pip3 install -e $URL;
 USER ec2-user
 
 WORKDIR /code
