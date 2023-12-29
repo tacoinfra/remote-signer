@@ -9,6 +9,15 @@ from PyKCS11 import CK_OBJECT_HANDLE, CKF_RW_SESSION, CKF_SERIAL_SESSION, \
 
 from tezos_signer import Signer
 
+#
+# We maintain a global seesion as many HSMs will prevent
+# multiple logins from the same user at the same time,
+# notably SoftHSMv2 which is used in our test framework.
+# This is also a little more efficient and we do not currently
+# have the ability to configure multiple HSMs in any case, so
+# we are not losing any functionality...
+
+session = None
 
 class HsmSigner(Signer):
     def __init__(self, config, key):
@@ -22,11 +31,15 @@ class HsmSigner(Signer):
         self.key = key
         self.lock = threading.Lock()
 
-        pkcs11 = PyKCS11Lib()
-        pkcs11.load(self.hsm_libfile)
-        self.session = pkcs11.openSession(self.hsm_slot,
-                                          CKF_SERIAL_SESSION|CKF_RW_SESSION)
-        self.session.login(self.hsm_pin)
+        global session
+        if session is None:
+            pkcs11 = PyKCS11Lib()
+            pkcs11.load(self.hsm_libfile)
+            session = pkcs11.openSession(self.hsm_slot,
+                                         CKF_SERIAL_SESSION|CKF_RW_SESSION)
+            session.login(self.hsm_pin)
+        self.session = session
+
         self.key = CK_OBJECT_HANDLE(self.session)
         self.key.assign(self.hsm_private_handle)
 
