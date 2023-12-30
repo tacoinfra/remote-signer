@@ -32,6 +32,29 @@ class TestRemoteSigner(unittest.TestCase):
                 self.assertEqual(req[3], got.level)
                 self.assertEqual(req[4], got.round)
 
+    def test_bad_configs(self):
+        k = Key.generate(curve=b'p2', export=False)
+
+        with self.assertRaises(Exception):
+            config = TacoinfraConfig(conf = {
+                'chain_ratchet': 'mockery',
+                'keys': [ k.public_key() ],
+                'policy': {
+                    'baking': 1,
+                    'voting': ['pass'],
+                }
+            })
+
+        with self.assertRaises(KeyError):
+            config = TacoinfraConfig(conf = {
+                'chain_ratchet': 'mockery',
+                'keys': [ f"{k.public_key()}:zzz_hsm" ],
+                'policy': {
+                    'baking': 1,
+                    'voting': ['pass'],
+                }
+            })
+
     def test_local_and_mockery(self):
         k1 = Key.generate(curve=b'p2', export=False)
         k2 = Key.generate(curve=b'p2', export=False)
