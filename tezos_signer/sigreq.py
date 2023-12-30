@@ -1,8 +1,8 @@
 import string
 import struct
 
-from pytezos_core.encoding import base58_encode
-from pytezos_core.key import blake2b
+from pytezos.crypto.encoding import base58_encode
+from pytezos.crypto.key import blake2b
 
 
 def get_be_int(bytes):
