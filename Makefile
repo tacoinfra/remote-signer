@@ -34,7 +34,23 @@ rebuild:
 	docker build -t remote-signer:latest .
 	${DC} up --build --force-recreate --no-deps -d
 
-int integration:
+int integration: up
+	# We expect this to fail if the table already exists,
+	# so we ignore that...
+	${DC} exec signer sh -c '					\
+		aws dynamodb create-table				\
+		    --region eu-west-1					\
+		    --endpoint http://dynamodb-local:8000		\
+		    --table-name test					\
+		    --attribute-definitions				\
+			AttributeName=sig_type,AttributeType=S		\
+		    --key-schema					\
+			AttributeName=sig_type,KeyType=HASH		\
+		    --provisioned-throughput				\
+			ReadCapacityUnits=5,WriteCapacityUnits=5	\
+		    --table-class STANDARD				\
+		|| :'
+
 	${DC} exec signer sh -c "pytest --cov=tezos_signer"
 
 docker: tarball

@@ -24,6 +24,6 @@ USER ec2-user
 RUN	set -e;							\
 	softhsm2-util --init-token --slot 0 --label "label1"	\
 		--pin resigner:1234 --so-pin 1234		\
-	    | awk '{ print $NF }' > hsm_slot 
+	    | awk '{ print $NF }' > hsm_slot
 
 WORKDIR /code
