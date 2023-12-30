@@ -186,6 +186,14 @@ which is based on the Cavium LiquidSecurity FIPS PCIe Card.
 We have also tested it on SoftHSM and this is included in our integration
 testing framework.
 
+The HsmSigner requires: hsm_username, hsm_slot, and hsm_lib to be defined
+in `keys.json`.
+
+The HsmSigner is called "pkcs11_hsm" when you configure it in `keys.json`.
+It takes one argument which is either the handle or label of the private
+key that you want to use.  If you provide a text label, it will use the
+first private key returned that matches it.
+
 ### Writing your own Signer
 
 The basic structure of a signer is, as mentioned above, a class with
