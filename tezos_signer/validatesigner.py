@@ -6,6 +6,8 @@
 
 import logging
 
+from werkzeug.exceptions import abort
+
 from tezos_signer import Signer
 
 baking_req_types = ["Baking", "Endorsement", "Preendorsement" ]
@@ -23,22 +25,21 @@ class ValidateSigner(Signer):
 
         if sigreq.get_type() in baking_req_types:
             if 'baking' not in self.policy or not self.policy['baking']:
-                raise(Exception("Baking is against policy"))
+                abort(403, "Baking is against policy")
             allowed = True
 
         if sigreq.get_type() in voting_req_types:
             if 'voting' not in self.policy:
-                raise(Exception('Voting is against policy'))
+                abort(403, 'Voting is against policy')
             if sigreq.get_vote() not in self.policy['voting']:
-                raise(Exception(f'Voting "{sigreq.get_vote()}" ' +
-                                 'is against policy'))
+                abort(403, f'Voting "{sigreq.get_vote()}" is against policy')
             allowed = True
 
         if 'allow_all' in self.policy and self.policy['allow_all']:
             allowed = True
 
         if not allowed:
-            raise(Exception('Request is against policy'))
+            abort(403, 'Request is against policy')
 
     def sign(self, sigreq):
         logging.debug(f"About to sign {sigreq.get_hex_payload()}")

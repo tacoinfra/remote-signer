@@ -3,6 +3,7 @@ import struct
 
 from pytezos.crypto.encoding import base58_encode
 from pytezos.crypto.key import blake2b
+from werkzeug.exceptions import abort
 
 
 def get_be_int(bytes):
@@ -28,7 +29,7 @@ class SignatureReq:
 
     def __init__(self, hexdata):
         if not all(c in string.hexdigits for c in hexdata):
-            raise('Invalid signature request: not all hex digits')
+            abort(400, 'Invalid signature request: not all hex digits')
 
         self.hex_payload = hexdata
         self.payload = bytes.fromhex(hexdata)
