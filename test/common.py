@@ -90,6 +90,7 @@ sig_reqs = [
         3bc3141500000000000b0000000035dd16cfb423dfe6ba2fc7885270799fb971b3dd
         120437b6b24dbe205456aab0"""))
 
+    # Valid votes, but some violate policy:
     , ("Forbidden", "Ballot", "NetXt1BLbMrNewd", "yay", eatwhite("""
         03d144833e2b0d12be5c424ffb5f024a9a18664518b050aa7af13406fb47cd650406
         008cf825f71b4ca4055bd2c1d4b33df8c114a8b24f00000049d0a3f07b8adfcf61f5
@@ -109,6 +110,13 @@ sig_reqs = [
         03f33bb07f5702ef66b51380d580fa5a22e235bbb4497fe8e25ebab6bf26e19bc706
         008cf825f71b4ca4055bd2c1d4b33df8c114a8b24f00000049d0a3f07b8adfcf61f5
         ca60f244ca9a876e76cbad9140980f6c88d0bf900ac6d802"""))
+
+    # This one fails because it is one byte too long:
+    , ("Forbidden", "Multiple operations not supported", "NetXyggpH1GQGYs",
+       None, eatwhite("""
+        03f33bb07f5702ef66b51380d580fa5a22e235bbb4497fe8e25ebab6bf26e19bc706
+        008cf825f71b4ca4055bd2c1d4b33df8c114a8b24f00000049d0a3f07b8adfcf61f5
+        ca60f244ca9a876e76cbad9140980f6c88d0bf900ac6d80207"""))
 ]
 
 

@@ -28,8 +28,9 @@ class TestRemoteSigner(unittest.TestCase):
                 self.assertEqual(req[3], got.vote)
                 continue
 
-            self.assertEqual(req[3], got.level)
-            self.assertEqual(req[4], got.round)
+            if got.type in ['Baking', 'Endorsement', 'Preendorsement']:
+                self.assertEqual(req[3], got.level)
+                self.assertEqual(req[4], got.round)
 
     def test_local_and_mockery(self):
         k1 = Key.generate(curve=b'p2', export=False)
