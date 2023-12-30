@@ -4,7 +4,7 @@
 
 from .sigreq import SignatureReq
 
-from .signer import Signer, MockSigner
+from .signer import Signer
 from .hsmsigner import HsmSigner
 from .localsigner import LocalSigner
 from .validatesigner import ValidateSigner

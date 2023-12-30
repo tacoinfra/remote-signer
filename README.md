@@ -186,13 +186,6 @@ which is based on the Cavium LiquidSecurity FIPS PCIe Card.
 We have also tested it on SoftHSM and this is included in our integration
 testing framework.
 
-### MockSigner
-
-This one was just used for unit testing and is deprecated as LocalSigner
-is used in our unit tests.  No point in making a mockery of a Signer when
-there is a perfectly good one that operates locally without reference
-to outside infrastructure.
-
 ### Writing your own Signer
 
 The basic structure of a signer is, as mentioned above, a class with

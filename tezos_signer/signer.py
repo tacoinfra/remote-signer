@@ -16,10 +16,3 @@ class Signer:
 
     def sign(self, sigreq):
         raise(NotImplementedError("Unimplemented virtual method"))
-
-class MockSigner(Signer):
-    def __init__(self, data):
-        self.raw_signed_block = data
-
-    def sign(self, sigreq=None):
-        return Signer.b58encode_signature(self.raw_signed_block)

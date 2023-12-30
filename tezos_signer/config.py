@@ -29,7 +29,7 @@ from pytezos.crypto.encoding import is_pkh
 from pytezos.crypto.key import Key
 
 from tezos_signer import DDBChainRatchet, HsmSigner, LocalSigner, \
-                         MockChainRatchet, MockSigner, ValidateSigner
+                         MockChainRatchet, ValidateSigner
 
 ratchets = {
     "mockery": MockChainRatchet,
@@ -39,7 +39,6 @@ ratchets = {
 signers = {
     "local": LocalSigner,
     "amazon_hsm": HsmSigner,   # deprecated, for compatibility
-    "mockery": MockSigner,
     "pkcs11_hsm": HsmSigner,
 }
 
