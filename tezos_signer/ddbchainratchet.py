@@ -1,27 +1,12 @@
 
-import decimal
-import json
 import logging
-import os
 
 import boto3
 from botocore.exceptions import ClientError
-from dyndbmutex.dyndbmutex import AcquireLockFailedError, DynamoDbMutex
 from werkzeug.exceptions import abort
 
 from tezos_signer import ChainRatchet
 
-logging.getLogger('dyndbmutex').setLevel(logging.CRITICAL)
-
-# Helper class to convert a DynamoDB item to JSON.
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, decimal.Decimal):
-            if o % 1 > 0:
-                return float(o)
-            else:
-                return int(o)
-        return super(DecimalEncoder, self).default(o)
 
 class DDBChainRatchet(ChainRatchet):
 
@@ -34,87 +19,29 @@ class DDBChainRatchet(ChainRatchet):
         self.dynamodb = boto3.resource('dynamodb', **kwargs)
         self.table = self.dynamodb.Table(config.get_ddb_table())
 
-    def CreateItem(self, keyname, key, level, round):
+    def check(self, sig_type, level=0, round=0):
         try:
-            put_response = self.table.put_item(
+            self.table.put_item(
                 Item={
-                    keyname: key,
+                    'sig_type': sig_type,
                     'lastblock': level,
-                    'lastround': round
-                }
-            )
-        except ClientError as err:
-            logging.error("DynamoDB error during CreateItem: " +
-                          err.response['Error']['Message'])
-            abort(500, "DB error")
-        else: 
-            logging.debug("PutItem succeeded: " +
-                          json.dumps(put_response, indent=4))
-            return True
-
-    def UpdateItem(self, key, level, round):
-        try:
-            response = self.table.update_item(
-                Key={
-                    'type': key
+                    'lastround': round,
                 },
-                UpdateExpression="set lastblock = :l, lastround = :r",
+                ConditionExpression=
+                    "attribute_not_exists(sig_type) OR " +
+                        "(lastblock < :l OR " +
+                            "( lastblock = :l AND lastround < :r)" +
+                        ")",
                 ExpressionAttributeValues={
                     ':l': level,
                     ':r': round
-                },
-                ReturnValues="UPDATED_NEW"
+                }
             )
         except ClientError as err:
+            code = err.response['Error']['Code']
+            if code == "ConditionalCheckFailedException":
+                abort(410, "Ratchet will not sign: " + 
+                      err.response['Error']['Message'])
             logging.error("DynamoDB error during UpdateItem: " +
                           err.response['Error']['Message'])
             abort(500, "DB error")
-        else:
-            logging.debug("UpdateItem succeeded: " +
-                          json.dumps(response, indent=4, cls=DecimalEncoder))
-            return True
-
-    def check_locked(self, sig_type, level=0, round=0):
-        try:
-            get_response = self.table.get_item(
-                Key={
-                    'type': sig_type
-                },
-                ConsistentRead=True
-            )
-        except ClientError as err:
-            logging.error("DynamoDB error during GetItem: " +
-                          err.response['Error']['Message'])
-            abort(500, "DB error")
-
-        if 'Item' not in get_response:
-            return self.CreateItem('type', sig_type, level, round)
-
-        item = get_response['Item']
-        logging.debug("GetItem succeeded: " +
-                      json.dumps(get_response, indent=4, cls=DecimalEncoder))
-        self.lastlevel = item['lastblock']
-        if 'lastround' in item:
-            self.lastround = item['lastround']
-        else:
-            self.lastround = 0
-
-        logging.debug(f"Current sig is {self.lastlevel}/{self.lastround}")
-
-        super().check(sig_type, level, round)
-
-        return self.UpdateItem(sig_type, level, round)
-
-    def check(self, sig_type, level=0, round=0):
-        # This code acquires a mutex lock using:
-        #      https://github.com/chiradeep/dyndb-mutex
-        # generate a unique name for this process/thread
-        my_name = os.urandom(8).hex()
-        m = DynamoDbMutex(sig_type, holder=my_name, timeoutms=60 * 1000,
-                          region_name=self.REGION)
-        try:
-            with m:
-                return self.check_locked(sig_type, level, round)
-        except AcquireLockFailedError:
-            abort(503, "Failed to obtain DB lock")
-
