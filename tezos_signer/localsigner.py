@@ -2,7 +2,7 @@
 # This is a simple local signer class.  It expects to have the secret
 # key passed in via the standard config next to the public_key.
 
-from pytezos_core.key import Key
+from pytezos.crypto.key import Key
 
 from tezos_signer import Signer
 

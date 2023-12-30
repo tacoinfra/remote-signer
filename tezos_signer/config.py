@@ -25,8 +25,8 @@
 import logging
 
 from flask import json
-from pytezos_core.encoding import is_pkh
-from pytezos_core.key import Key
+from pytezos.crypto.encoding import is_pkh
+from pytezos.crypto.key import Key
 
 from tezos_signer import DDBChainRatchet, HsmSigner, LocalSigner, \
                          MockChainRatchet, MockSigner, ValidateSigner

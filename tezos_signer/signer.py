@@ -3,7 +3,7 @@
 # to implement a constructor and a single method "sign".  They return a
 # base58-encoded signature.
 
-from pytezos_core.encoding import base58_encode
+from pytezos.crypto.encoding import base58_encode
 
 
 class Signer:
