@@ -38,8 +38,9 @@ ratchets = {
 
 signers = {
     "local": LocalSigner,
-    "amazon_hsm": HsmSigner,
+    "amazon_hsm": HsmSigner,   # deprecated, for compatibility
     "mockery": MockSigner,
+    "pkcs11_hsm": HsmSigner,
 }
 
 
