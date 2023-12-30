@@ -292,6 +292,23 @@ current level and round.  To configure it, you need to set two config
 variables: `aws_region` and `ddb_table`.  `ddb_table` is name of the table
 within DynamoDB that your ratchet is stored.
 
+A table in DynamoDB is required, here is an example of how to create
+one:
+
+```
+aws dynamodb create-table --region af-south-1
+        --table-name baking_table
+	--attribute-definitions AttributeName=sig_type,AttributeType=S
+        --key-schema AttributeName=sig_type,KeyType=HASH
+	--provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
+	--table-class STANDARD
+```
+
+NOTE: older versions of this software used `type` as the name of the
+primary key, but this is a reserved word in DynamoDB and we had to
+change it to `sig_req` in the newer versions.
+
+
 ### MockChainRatchet
 
 This ChainRatchet stores the current level and round in memory and is
