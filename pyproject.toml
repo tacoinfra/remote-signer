@@ -6,6 +6,7 @@ ignore_names = ["schema_editor", "model_admin"]
 
 [tool.ruff]
 line-length = 79
+exclude = ["test/"]
 ignore = ["E722", "E741", "F541"]
 
 # We use 79 char line length so that it is 80 when we `git diff`
