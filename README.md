@@ -22,7 +22,8 @@ quick example for a local signer:
 	},
 	"policy": {
 		"baking": 1,
-		"voting": ["aye", "pass"]
+		"voting": ["aye", "pass"],
+		"allow_all": 0,
 	}
 }
 ```
@@ -48,25 +49,76 @@ Here are all of the possible values:
 
 ### keys
 
-Keys must be a dictionary where each key is a secret key, public key, or
-public key hash.  Using a public key hash is deprecated and kept only for
-compatibility with older configurations.  If a public key hash is used,
-then the public key must be provided in the key definition.
+The interpretation of keys is quite flexible.  It can be either a list
+or a dictionary.  If it is a list, each element must be a string which
+is a colon separated list of key, signer type, signer args.  E.g.:
 
-The value associated with each key is either a string or a dictionary.
-Using a dictionary is deprecated and will not be documented here.
+```
+{
+	"keys": [
+		"p2pk124234999...:pkcs11_hsm:baking-key-tokyo",
+		"p2sk123412341....",
+	],
+```
 
-If it is a string, then it will be interpreted as a colon separated
-list of values.  The first value must be either a public or secret key.
-The second value is the name of the signer which will be used with
-this key.  And all additional values will be passed to the signer as
-arguments and therefore depend on which signer is used.
+This will be interpreted as two keys.  The first uses the pkcs11_hsm
+signer and will pass it a single parameter "baking-key-tokyo" which
+will be interpreted by that signer as a label for the key in the HSM
+to which it is connected.  The second key doesn't require any arguments,
+because it is a secret key and so will just use the local signer.
 
-Any fields that are implied can be elided.  E.g. if you provide a secret
-key, then you don't need to specify anything else as it will default to a
-"local" signer.
+If keys is a dictionary, then it will have the following structure:
 
-Valid signers are: local and amazon_hsm.
+```
+{
+	"keys": {
+		"tz3124234999...": {
+			"public_key": "p2pk124234999...",
+			"signer": "pkcs11_hsm",
+			"signer_args": ["baking-key-tokyo"],
+		},
+		"tz3123412341...": {
+			"private_key": "p2sk123412341...",
+			"public_key":  "p2pk123412341...",
+			"signer": "local",
+		},
+	},
+}
+```
+
+In the above structure, if you provide as a key either a public or
+private key, it will derive the appropriate elements and add them in.
+This means that the following config is equivalent to the above:
+
+
+```
+{
+	"keys": {
+		"p2pk124234999...": {
+			"signer": "pkcs11_hsm",
+			"signer_args": ["baking-key-tokyo"],
+		},
+		"p2sk23412341...": {}
+	},
+}
+```
+
+The two forms can also be mixed:
+
+```
+{
+	"keys": {
+		"p2pk124234999...:pkcs11_hsm": {
+			"signer_args": ["baking-key-tokyo"],
+		},
+		"p2sk23412341...": {}
+	},
+}
+```
+
+Although, that should be stronly discouraged.
+
+Valid signers are: local and pkcs11_hsm.
 
 ## Signer Class
 
@@ -88,7 +140,8 @@ dictionary and we currently define two keys: "baking" and "voting".  The
 former is a boolean and if true then all baking requests (preendorsement,
 endoresement, block) are allowed.  The latter is a list of strings:
 "aye", "nay", or "pass".  If this is defined then votes matching any of
-the string in the list are allowed.
+the string in the list are allowed.  If the "allow_all" policy element
+is defined and true, then all requests are allowed.
 
 Next, a ChainRatchet is applied if the SignatureRequest is of type
 "baking".  This is sometimes called a watermark in other remote signers.
@@ -110,10 +163,10 @@ This class makes a good example of how to add your own signer.
 
 ### HsmSigner
 
-This class uses the
-[py-hsm module](https://github.com/bentonstark/py-hsm) to
-support PKCS#11 signing operations, which means it should support the
-following HSMs:
+This class uses the [PyKCS11 module](https://pypi.org/project/PyKCS11/)
+support PKCS#11 signing operations, which means it should support any
+HSM which ships with a shared object library which provides a PKCS#11
+compatible interface.  This should include at least the following HSMs:
 
 * Gemalto SafeNet Luna SA-4
 * Gemalto SafeNet Luna SA-5
@@ -125,12 +178,20 @@ following HSMs:
 * Utimaco Security Server Simulator (SMOS Ver. 3.1.2.3)
 * OpenDNSSEC SoftHSM 2.2.0 (softhsm2)
 
-Note that we have only tested it on [AWS CloudHSM](https://aws.amazon.com/cloudhsm/), which is based on the Cavium LiquidSecurity FIPS PCIe Card.
+Note that we have not tested it on all of the above HSMs.
+
+We have tested it on [AWS CloudHSM](https://aws.amazon.com/cloudhsm/),
+which is based on the Cavium LiquidSecurity FIPS PCIe Card.
+
+We have also tested it on SoftHSM and this is included in our integration
+testing framework.
 
 ### MockSigner
 
-This one is just used for unit testing and may be deprecated in the
-future as LocalSigner should be good enough for unit tests.
+This one was just used for unit testing and is deprecated as LocalSigner
+is used in our unit tests.  No point in making a mockery of a Signer when
+there is a perfectly good one that operates locally without reference
+to outside infrastructure.
 
 ### Writing your own Signer
 
@@ -160,7 +221,8 @@ class MyHSMSigner(Signer):
         # Now, we hash the data in the way the Tezos expects.
         # Note that this step is not required if the signature
         # code already does it, e.g. pytezos Key.sign() does
-        # this for you.
+        # this for you.  In this case, use sigreq.get_payload()
+        # instead of get_hashed_payload().
 
         with self.lock:
             self.hsm.sign(data=sigreq.get_hashed_payload(), OTHER ARGS)
@@ -168,7 +230,7 @@ class MyHSMSigner(Signer):
         # And our parent class has a method to base58 encode the
         # result in the correct way for us.  Again, note that this
         # isn't necessary for the local signer as pytezos Key.sign()
-        # does this for you.
+        # does this for you.  It just returns sig.
 
         return Signer.b58encode_signature(sig)
         
@@ -210,7 +272,7 @@ class MyChainRatchet:
 
     def check(self, sig_type, level, round):
         # These operations must be performed under a lock, unless you
-        # have some interesting DB logic which achieves the same result.
+        # use test and set or the like in the DB to achieve the same result
         with self.db.lock():
             # First we update our object's idea of what levels and rounds
             # have come before by consulting our external data source
@@ -230,22 +292,20 @@ class MyChainRatchet:
             self.db.update_db(sig_type, level, round)
 ```
 
-In the above example, we refer to "interesting DB logic which achieves
-the same result".  This could be an atomic test and set operation if
-your datastore supports it.
-
 ### DDBChainRatchet
 
 This ChainRatchet uses Amazon AWS' DynamoDB as a backend to store the
 current level and round.  To configure it, you need to set two config
 variables: `aws_region` and `ddb_table`.  `ddb_table` is name of the table
-within DynamoDB that your ratchet is stored.  These are documented above.
+within DynamoDB that your ratchet is stored.
 
 ### MockChainRatchet
 
 This ChainRatchet stores the current level and round in memory and is
 used in testing because the level and round are not persistent between
-invocations.
+invocations.  The above argument for deprecating the MockSigner does not
+apply here as we still have a need to make a mockery of a ChainRatchet
+in our testing.
 
 ## Security Notes
 
