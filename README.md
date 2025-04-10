@@ -1,3 +1,13 @@
+# Important notice
+
+*This project is no longer maintained. Amazon are migrating their customers
+from SDK3 to SDK5 and also HSMv1 to HSMv2. You should have received
+notice from them.*
+
+**What to do:** ECAD Labs will be releasing a version of Signatory that
+supports CloudHSMv2. We advise you to look at this version and not use the
+Tacoinfra remote signer.
+
 # Tezos Remote Signer
 
 This is a Python Flask app that implements a Tezos Remote Signer.
